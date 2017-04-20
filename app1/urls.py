@@ -1,6 +1,7 @@
 from django.conf.urls import url
 
 from . import views
+from app1.views import *
 
 urlpatterns = [
     # ex: /app1/
@@ -11,4 +12,6 @@ urlpatterns = [
     url(r'^(?P<id>[0-9]+)/results/$', views.results, name='results'),
     # ex: /app1/5/vote/
     url(r'^(?P<id>[0-9]+)/vote/$', views.vote, name='vote'),
+    url(r'^req$', req),
+    
 ]
