@@ -14,9 +14,6 @@ psycopg2==2.7.1
 pycparser==2.17
 pycrypto==2.6.1
 pycurl==7.43.0
-pygobject==3.22.0
-pyodbc==3.0.10
-pysqlite==2.7.0
 python-apt==1.4.0b2
 python-firebase==1.2
 python-jwt==2.0.1
