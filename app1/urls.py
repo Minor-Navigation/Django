@@ -13,5 +13,8 @@ urlpatterns = [
     # ex: /app1/5/vote/
     url(r'^(?P<id>[0-9]+)/vote/$', views.vote, name='vote'),
     url(r'^req$', req),
+    url(r'^signup$', signup),
+    url(r'^login$', login),
+    url(r'^logout$', logout),
     
 ]

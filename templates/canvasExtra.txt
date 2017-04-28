@@ -1,0 +1,57 @@
+maxlat=28.9689998626709 maxLon=77.73299407958984
+minlat=28.18301010131836 minLon=76.69200134277344
+
+
+int locX1 = (int) ((lon1-minLong)*(this.getWidth())/(maxLong-minLong));
+int locY1 = (int) ((maxLat-(lat1))*(this.getHeight())/(maxLat-minLat));
+
+
+
+<style>
+    #mycanvas {
+        width: 1000px;
+        height: 500px;
+        padding: 50px;
+        border: 1px solid red;
+    }
+</style>{% endcomment %} {% endblock %} {% block main %}
+<canvas id="myCanvas" width="1000" height="500" style="border:1px solid red;">
+
+</canvas>
+
+<script>
+    var c = document.getElementById("myCanvas");
+    var ctx = c.getContext("2d");
+    ctx.fillRect(10, 10, 5, 5);
+
+    ctx.stroke();
+</script>
+
+<script>
+    var c = document.getElementById("myCanvas");
+    var ctx = c.getContext("2d");
+    ctx.fillRect(20, 20, 150, 100);
+    ctx.stroke();
+
+    var c = document.getElementById("myCanvas");
+    var ctx = c.getContext("2d");
+    ctx.rect(20, 20, 150, 100);
+    ctx.stroke();
+</script>
+
+
+<script>
+    var c = document.getElementById("myCanvas");
+    var ctx = c.getContext("2d");
+    ctx.beginPath();
+    ctx.fillArc(95, 50, 40, 0, 2 * Math.PI);
+    ctx.stroke();
+</script>
+
+
+<script>
+    var c = document.getElementById("myCanvas");
+    var ctx = c.getContext("2d");
+    ctx.font = "30px Arial";
+    ctx.fillText("Hello World", 100, 150);
+</script>

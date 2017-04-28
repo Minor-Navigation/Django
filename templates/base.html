@@ -1,13 +1,17 @@
 <!doctype html>
 <html class="no-js" lang="">
-  <head>
+
+<head>
     {% load staticfiles %}
+
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <link rel="stylesheet" type="text/css" href="{% static "css/bootstrap.min.css" %}">
+    <link rel="stylesheet" type="text/css" href="{% static "css/bootstrap.min.css" %}"> {% block script %}{% endblock %}
     <!--<link rel="stylesheet" href="./https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">-->
-  </head>
-  <body>
+</head>
+
+<body>
     {% block main %}{% endblock %}
-  </body>
+</body>
+
 </html>
