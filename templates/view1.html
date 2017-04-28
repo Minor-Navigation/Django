@@ -13,41 +13,58 @@
     var width = c.width;
     var height = c.height;
     var ctx = c.getContext("2d");
-    var a = [{
-            lat: 28.577966690063477,
-            lon: 77.23466491699219
 
-        }, {
-            lat: 28.577966690063477,
-            lon: 77.23583221435547
-        }, {
-            lat: 28.57798194885254,
-            lon: 77.23640441894531
-        }, {
-            lat: 28.577999114990234,
-            lon: 77.23780822753906
-        },
+    var data = [];
+        //console.log('{{list}}');
 
-    ]
+        {% for i in list %}
+        var temp = '{{ i }}';
+        //console.log(temp); 
+        
+        data.push( parseFloat(temp));
+        {% endfor %}
 
-    for (var i = 0; i < a.length; i++) {
-        console.log(width, height);
-        var lon = a[i].lon;
-        var lat = a[i].lat;
+
+    // var a = [{
+    //         lat: 28.577966690063477,
+    //         lon: 77.23466491699219
+
+    //     }, {
+    //         lat: 28.577966690063477,
+    //         lon: 77.23583221435547
+    //     }, {
+    //         lat: 28.57798194885254,
+    //         lon: 77.23640441894531
+    //     }, {
+    //         lat: 28.577999114990234,
+    //         lon: 77.23780822753906
+    //     },
+
+    // ]
+    
+    //console.log(width, height);
+    //console.log("DATA=", data,"a=", a);
+
+
+    for (var i = 0; i < data.length; i++) {
+        var lon = data[i+1];
+        var lat = data[i];
+        i++;
 
 
         var locX1 = ((lon - minLong) * (width) / (maxLong - minLong));
         var locY1 = ((maxLat - (lat)) * (height) / (maxLat - minLat));
 
-        console.log(locX1, locY1);
+        //console.log(lat, lon, locX1, locY1);
 
         ctx.fillRect(locX1, locY1, 1, 1);
 
         ctx.stroke();
     }
-
-    //console.log(width, height);
 </script>
+
+
+
 
 <div class="container">
     <form action="/app1/req" method="POST">
@@ -60,7 +77,7 @@
     </form>
 
 
-    {% if list %}
+    <!-- {% if list %}
     <ul class="list-group">
         {% for l in list %}
         <li class="list-group-item">{{ l }}
@@ -68,9 +85,9 @@
         {% endfor %}
     </ul>
     {% else %}
-    <label for="inputdefault">Search for something.</label> {% endif %}
+    <label for="inputdefault">Search for something.</label> {% endif %} -->
 
-
+    
 
 
 </div>

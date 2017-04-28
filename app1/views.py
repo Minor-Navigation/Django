@@ -5,12 +5,32 @@ from django.http import HttpResponse
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from models import Users
+
 import json
+
+import os
+
 
 @csrf_exempt
 def req(request):
+    i=0;
+    module_dir = os.path.dirname(__file__)  # get current directory
+    file_path = os.path.join(module_dir, 'data.txt')
+    list1=[]
+    with open(file_path) as fp:
+        for line in fp:
+            words = line.split(" ") 
+            #loc = {'lat':float(words[0]),  'lon': float(words[1]) }
+            list1.append(float(words[0]))
+            list1.append(float(words[1]))
+
+            i+=1
+            if(i==100000):
+                break;
+    
+    print list1            
     print(request.POST.get('search_name'))
-    list1 = ['physics', 'chemistry', 1997, 2000];
+    #list1 = ['physics', 'chemistry', 1997, 2000];
     context = {'list': list1}
 
     return render(request, 'view1.html', context)
