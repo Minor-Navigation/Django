@@ -1,30 +1,54 @@
 {% extends "base.html" %}
 {% block script %} 
 
-    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
     <script>
     //////////////////////////
-
-    
-
     
 
     $(document).ready(function () {
 
-        function createWay(list){
-            var maxLat = 28.9689998626709,
-                maxLong = 77.73299407958984;
-            var minLat = 28.18301010131836,
-                minLong = 76.69200134277344;
+        var maxLat = 28.9689998626709,
+            maxLong = 77.73299407958984;
+        var minLat = 28.18301010131836,
+            minLong = 76.69200134277344;
 
-            var c = document.getElementById("myCanvas");
-            var width = c.width;
-            var height = c.height;
-            var ctx = c.getContext("2d");
+        var c = document.getElementById("myCanvas");
+        var width = c.width;
+        var height = c.height;
+        var ctx = c.getContext("2d");
 
-           
+        function displayNodes(data){
+
+            // var data = [];
+            // console.log("list=", '{{list}}');
+
+            // {% for i in list %}
+            //     var temp = '{{ i }}';
+            //     //console.log(temp); 
+                
+            //     data.push( parseFloat(temp));
+            // {% endfor %}
+
+            for (var i = 0; i < data.length; i++) {
+                var lon = data[i+1];
+                var lat = data[i];
+                i++;
+
+
+                var locX1 = ((lon - minLong) * (width) / (maxLong - minLong));
+                var locY1 = ((maxLat - (lat)) * (height) / (maxLat - minLat));
+
+                //console.log(lat, lon, locX1, locY1);
+
+                ctx.fillRect(locX1, locY1, 1, 1);
+
+                ctx.stroke();
+            }
+        }
+
+        function displayWays(list){
             
-             for (var i = 0; i < list.length -1; i++) {
+            for (var i = 0; i < list.length -1; i++) {
                 var lon1 = list[i+1];
                 var lat1 = list[i];
                 var lon2 = list[i+3];
@@ -32,24 +56,21 @@
                 
                 i++;
 
-
-
                 var locX1 = ((lon1 - minLong) * (width) / (maxLong - minLong));
                 var locY1 = ((maxLat - (lat1)) * (height) / (maxLat - minLat));
                 var locX2 = ((lon2 - minLong) * (width) / (maxLong - minLong));
                 var locY2 = ((maxLat - (lat2)) * (height) / (maxLat - minLat));
 
-                var ctx = c.getContext("2d");
                 ctx.beginPath();
                 ctx.moveTo(locX1,locY1);
                 ctx.lineTo(locX2,locY2);
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = '#ff0000';
                 ctx.stroke();
-
-                console.log("here");
-
                 
-             }
-        }
+            }
+        }    
+        
         
         $("body").on("click", ".list-group-item", function(){
             console.log('id of clicked item= ', this.id);
@@ -66,7 +87,7 @@
                 console.log("obj= ",obj);
                 list= [28.492847442626953, 77.00435638427734, 28.434986114501953, 77.05077362060547, 28.619922637939453, 77.07022094726562, 28.503517150878906, 77.20549774169922, 28.758880615234375, 77.1546401977539, 28.47164535522461, 77.49659729003906, 28.49455451965332, 77.28811645507812, 28.67414093017578, 77.44739532470703, 28.60383415222168, 77.24569702148438, 28.431650161743164, 77.00296783447266, 28.322860717773438, 77.32283782958984];
 
-                createWay(list);
+                displayWays(list);
 
 
 
@@ -162,13 +183,15 @@
     </div>
     
     <div class="form-group">
-        <label for="inputdefault">Search Place:</label>
+        <label for="inputdefault">Search By Name:</label>
         
         <input type="text" name="search_name" class="form-control" value="">
 
         <input type="button"  onclick="myCall(document.getElementsByName('search_name')[0].value)" class="btn btn-default" value="Update" />
 
     </div>
+
+    
 
     
 
@@ -189,8 +212,46 @@
 
     
 
-    <canvas id="myCanvas" width="1000" height="500" style="border:1px solid red;">
+    <canvas id="myCanvas" width="1000" height="500"  style="z-index:1; border:1px solid red;">
     </canvas>
+
+
+   
+
+    <button id="IN" type="button" class="btn btn-default btn-sm" style="z-index:2; position:absolute; ">
+          <span class="glyphicon glyphicon-zoom-in"></span> Zoom-In
+    </button>
+
+    <button id="OUT" type="button" class="btn btn-default btn-sm" style="z-index:2; position:absolute; ">
+          <span class="glyphicon glyphicon-zoom-in"></span> Zoom-Out
+    </button>
+
+
+
+    <!-- For getting top and left of canvas -->
+   
+    <script>
+        var c = document.getElementById("myCanvas");
+        
+        var width = c.width;
+        var height = c.height;
+
+        var rect = c.getBoundingClientRect();
+        
+        var left1=rect.left + width; 
+        var top1=rect.top ;
+        console.log("left1=", left1.toString());
+        console.log("top1=", top1.toString());
+
+
+        document.getElementById("OUT").style.top = (top1).toString()+"px";
+        document.getElementById("OUT").style.left = (left1+10).toString()+"px";
+
+        document.getElementById("IN").style.top =  (top1+35).toString()+"px";
+        document.getElementById("IN").style.left = (left1+10).toString()+"px";
+        
+    </script>
+
 
     <!-- This script is for mapping nodes on map(canvas) -->
     <script>
@@ -214,9 +275,6 @@
             data.push( parseFloat(temp));
             {% endfor %}
 
-
-        
-        
         //console.log(width, height);
         //console.log("DATA=", data,"a=", a);
 
@@ -236,6 +294,16 @@
 
             ctx.stroke();
         }
+        ctx.font = "30px Verdana";
+
+        var gradient = ctx.createLinearGradient(0, 0, c.width, 0);
+        gradient.addColorStop("0", "magenta");
+        gradient.addColorStop("0.5", "blue");
+        gradient.addColorStop("1.0", "red");
+
+        ctx.strokeStyle = gradient;
+        ctx.strokeText("Navigation On Delhi Map :)", 10, 50);
+
     </script>
 
 
