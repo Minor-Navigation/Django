@@ -18,8 +18,5 @@ urlpatterns = [
     url(r'^data$', data),
     url(r'^extra$', generic.TemplateView.as_view(template_name='extra.html')),
     url(r'^list$', return_list),
-    url(r'^signup$', signup),
-    url(r'^login$', login),
-    url(r'^logout$', logout),
     
 ]
