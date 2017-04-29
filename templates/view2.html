@@ -1,7 +1,47 @@
 {% extends "base.html" %}
 
+{% block script %} 
+
+    	$.post("/rmi_servlet/FileServlet", $.param(params), function(response) {
+    	    editor_text=String(response)
+
+    	    var editor = ace.edit("editor");
+    	    
+    	    editor.setTheme("ace/theme/xcode");
+    	    editor.getSession().setMode("ace/mode/javascript");
+    	    
+    	    editor.setValue(editor_text)
+    	});
+			        
+			     
+{% endblock %} 
+
 {% block main %}
+
 <div class="container">
-  <h1>View 2</h1>
+    <form action="/app1/req" method="POST">
+        <div class="form-group">
+            <label for="inputdefault">Search Place:</label>
+            <input type="text" class="form-control" value="">
+            <br>
+            <input type="submit" class="btn btn-default" value="Submit">
+        </div>
+    </form>
+
+
+    <!-- {% if list %}
+    <ul class="list-group">
+        {% for l in list %}
+        <li class="list-group-item">{{ l }}
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <label for="inputdefault">Search for something.</label> {% endif %} -->
+
+    
+
+
 </div>
 {% endblock %}
+

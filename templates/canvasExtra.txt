@@ -55,3 +55,30 @@ int locY1 = (int) ((maxLat-(lat1))*(this.getHeight())/(maxLat-minLat));
     ctx.font = "30px Arial";
     ctx.fillText("Hello World", 100, 150);
 </script>
+
+
+ <!-- 
+        // var a = [{
+        //         lat: 28.577966690063477,
+        //         lon: 77.23466491699219
+
+        //     }, {
+        //         lat: 28.577966690063477,
+        //         lon: 77.23583221435547
+        //     }, {
+        //         lat: 28.57798194885254,
+        //         lon: 77.23640441894531
+        //     }, {
+        //         lat: 28.577999114990234,
+        //         lon: 77.23780822753906
+        //     },
+
+        // ]
+     -->
+//line
+var c=document.getElementById("myCanvas");
+var ctx=c.getContext("2d");
+ctx.beginPath();
+ctx.moveTo(0,0);
+ctx.lineTo(300,150);
+ctx.stroke();

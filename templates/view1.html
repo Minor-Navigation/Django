@@ -1,95 +1,246 @@
-{% extends "base.html" %} {% block script %} {% endblock %} {% block main %}
-<canvas id="myCanvas" width="1000" height="500" style="border:1px solid red;">
+{% extends "base.html" %}
+{% block script %} 
 
-</canvas>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+    <script>
+    //////////////////////////
 
-<script>
-    var maxLat = 28.9689998626709,
-        maxLong = 77.73299407958984;
-    var minLat = 28.18301010131836,
-        minLong = 76.69200134277344;
+    
 
-    var c = document.getElementById("myCanvas");
-    var width = c.width;
-    var height = c.height;
-    var ctx = c.getContext("2d");
+    
 
-    var data = [];
-        //console.log('{{list}}');
+    $(document).ready(function () {
 
-        {% for i in list %}
-        var temp = '{{ i }}';
-        //console.log(temp); 
+        function createWay(list){
+            var maxLat = 28.9689998626709,
+                maxLong = 77.73299407958984;
+            var minLat = 28.18301010131836,
+                minLong = 76.69200134277344;
+
+            var c = document.getElementById("myCanvas");
+            var width = c.width;
+            var height = c.height;
+            var ctx = c.getContext("2d");
+
+           
+            
+             for (var i = 0; i < list.length -1; i++) {
+                var lon1 = list[i+1];
+                var lat1 = list[i];
+                var lon2 = list[i+3];
+                var lat2 = list[i+2];
+                
+                i++;
+
+
+
+                var locX1 = ((lon1 - minLong) * (width) / (maxLong - minLong));
+                var locY1 = ((maxLat - (lat1)) * (height) / (maxLat - minLat));
+                var locX2 = ((lon2 - minLong) * (width) / (maxLong - minLong));
+                var locY2 = ((maxLat - (lat2)) * (height) / (maxLat - minLat));
+
+                var ctx = c.getContext("2d");
+                ctx.beginPath();
+                ctx.moveTo(locX1,locY1);
+                ctx.lineTo(locX2,locY2);
+                ctx.stroke();
+
+                console.log("here");
+
+                
+             }
+        }
         
-        data.push( parseFloat(temp));
-        {% endfor %}
+        $("body").on("click", ".list-group-item", function(){
+            console.log('id of clicked item= ', this.id);
+
+            var request = $.ajax({
+                url: "/app1/data",
+                type: "POST",
+                data: { name: this.id } ,            
+                dataType: "html"
+            });
+
+            request.done(function(msg) {
+                obj = JSON.parse(msg);
+                console.log("obj= ",obj);
+                list= [28.492847442626953, 77.00435638427734, 28.434986114501953, 77.05077362060547, 28.619922637939453, 77.07022094726562, 28.503517150878906, 77.20549774169922, 28.758880615234375, 77.1546401977539, 28.47164535522461, 77.49659729003906, 28.49455451965332, 77.28811645507812, 28.67414093017578, 77.44739532470703, 28.60383415222168, 77.24569702148438, 28.431650161743164, 77.00296783447266, 28.322860717773438, 77.32283782958984];
+
+                createWay(list);
 
 
-    // var a = [{
-    //         lat: 28.577966690063477,
-    //         lon: 77.23466491699219
 
-    //     }, {
-    //         lat: 28.577966690063477,
-    //         lon: 77.23583221435547
-    //     }, {
-    //         lat: 28.57798194885254,
-    //         lon: 77.23640441894531
-    //     }, {
-    //         lat: 28.577999114990234,
-    //         lon: 77.23780822753906
-    //     },
+                
+            });
 
-    // ]
+            request.fail(function(jqXHR, textStatus) {
+                alert( "Request failed: " + textStatus );
+            });
+
+        });
+
+    })
     
-    //console.log(width, height);
-    //console.log("DATA=", data,"a=", a);
+    
 
+    function listing(names, ids) {
+        var ul = $('<ul class="list-group" id="ways"  />');
 
-    for (var i = 0; i < data.length; i++) {
-        var lon = data[i+1];
-        var lat = data[i];
-        i++;
+        for(var i=0 ;i<names.length; i++){
+            console.log(ids[i]);
+            var li = $('<li class="list-group-item"/>').appendTo(ul);
+            li.attr("id", names[i]);
+            //li.attr("name", names[i]);
+            var t =names[i];
+            li.append(t);
+        }
 
-
-        var locX1 = ((lon - minLong) * (width) / (maxLong - minLong));
-        var locY1 = ((maxLat - (lat)) * (height) / (maxLat - minLat));
-
-        //console.log(lat, lon, locX1, locY1);
-
-        ctx.fillRect(locX1, locY1, 1, 1);
-
-        ctx.stroke();
+        return ul;
     }
-</script>
+
+    ///////////////////////////
+
+    function myCall(name) {
+        console.log("here");
+        var request = $.ajax({
+                url: "/app1/list",
+                type: "POST",
+                data: { search: name } ,            
+                dataType: "html"
+        });
+
+        request.done(function(msg) {
+            obj = JSON.parse(msg);
+            ids=obj.id;
+            names=obj.name;
+
+            console.log("response= ",ids);
+            console.log("response= ",names);
+            $("#mybox").html(msg);
+
+            $('.listing').html(listing(names, ids));
+        
+
+        });
+
+        request.fail(function(jqXHR, textStatus) {
+            alert( "Request failed: " + textStatus );
+        });
+    }
+    ///////////////////////////////
+    
+
+    //////////////////////
+    </script>
+
+    <meta charset="utf-8" />
+    <title>MinorProject</title>
+    
+    <style type="text/css">
+        #mybox {
+            width: 300px;
+            height: 200px;
+            border: 1px solid #999;
+        }
+        .list-group-item {
+            cursor: pointer
+        }
+    </style>
+
+{% endblock %} 
 
 
+{% block main %}
 
+    Prefix Search:<br />
+    <div class="listing"> 
 
-<div class="container">
-    <form action="/app1/req" method="POST">
-        <div class="form-group">
-            <label for="inputdefault">Search Place:</label>
-            <input type="text" class="form-control" value="">
-            <br>
-            <input type="submit" class="btn btn-default" value="Submit">
-        </div>
-    </form>
+    </div>
 
+    <div id="mybox">
 
-    <!-- {% if list %}
-    <ul class="list-group">
-        {% for l in list %}
-        <li class="list-group-item">{{ l }}
-        </li>
-        {% endfor %}
-    </ul>
-    {% else %}
-    <label for="inputdefault">Search for something.</label> {% endif %} -->
+    </div>
+    
+    <div class="form-group">
+        <label for="inputdefault">Search Place:</label>
+        
+        <input type="text" name="search_name" class="form-control" value="">
+
+        <input type="button"  onclick="myCall(document.getElementsByName('search_name')[0].value)" class="btn btn-default" value="Update" />
+
+    </div>
 
     
 
+        <!-- {% if list %}
+        <ul class="list-group">
+            {% for l in list %}
+            <li class="list-group-item">{{ l }}
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <label for="inputdefault">Search for something.</label> {% endif %} -->
 
-</div>
+        
+
+
+    </div>
+
+    
+
+    <canvas id="myCanvas" width="1000" height="500" style="border:1px solid red;">
+    </canvas>
+
+    <!-- This script is for mapping nodes on map(canvas) -->
+    <script>
+        var maxLat = 28.9689998626709,
+            maxLong = 77.73299407958984;
+        var minLat = 28.18301010131836,
+            minLong = 76.69200134277344;
+
+        var c = document.getElementById("myCanvas");
+        var width = c.width;
+        var height = c.height;
+        var ctx = c.getContext("2d");
+
+        var data = [];
+            console.log("list=", '{{list}}');
+
+            {% for i in list %}
+            var temp = '{{ i }}';
+            //console.log(temp); 
+            
+            data.push( parseFloat(temp));
+            {% endfor %}
+
+
+        
+        
+        //console.log(width, height);
+        //console.log("DATA=", data,"a=", a);
+
+
+        for (var i = 0; i < data.length; i++) {
+            var lon = data[i+1];
+            var lat = data[i];
+            i++;
+
+
+            var locX1 = ((lon - minLong) * (width) / (maxLong - minLong));
+            var locY1 = ((maxLat - (lat)) * (height) / (maxLat - minLat));
+
+            //console.log(lat, lon, locX1, locY1);
+
+            ctx.fillRect(locX1, locY1, 1, 1);
+
+            ctx.stroke();
+        }
+    </script>
+
+
+
+
+   
 
 {% endblock %}
