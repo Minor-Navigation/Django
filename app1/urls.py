@@ -16,6 +16,7 @@ urlpatterns = [
     url(r'^(?P<id>[0-9]+)/vote/$', views.vote, name='vote'),
     url(r'^req$', req),
     url(r'^data$', data),
+    url(r'^rtree$', rtree),
     url(r'^extra$', generic.TemplateView.as_view(template_name='extra.html')),
     url(r'^list$', return_list),
     

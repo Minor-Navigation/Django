@@ -6,6 +6,17 @@
     
         $(document).ready(function () {
 
+            var scale = 1;
+            var originx = 0;
+            var originy = 0;
+            
+            var admin_level=1;
+
+
+            var zoomIntensity = 1.5;
+
+            
+
             var maxLat = 28.9689998626709,
                 maxLong = 77.73299407958984;
             var minLat = 28.18301010131836,
@@ -16,48 +27,238 @@
             var height = c.height;
             var ctx = c.getContext("2d");
 
-            ///////////////////////////////////////////////////
-            //<!-- This script is for mapping nodes on map(canvas) -->
-        
-            var data = [];
-            //console.log("list=", '{{list}}');
 
-            
-            // this is is from django
-            
-            {% for i in list %}
-            var temp = '{{ i }}';
-            //console.log(temp); 
-            
-            data.push( parseFloat(temp));
-            {% endfor %}
+            var visibleWidth = width;
+            var visibleHeight = height;
 
-            
-            for (var i = 0; i < data.length; i++) {
-                var lon = data[i+1];
-                var lat = data[i];
-                i++;
-
-
-                var locX1 = ((lon - minLong) * (width) / (maxLong - minLong));
-                var locY1 = ((maxLat - (lat)) * (height) / (maxLat - minLat));
-
-                //console.log(lat, lon, locX1, locY1);
-
-                ctx.fillRect(locX1, locY1, 1, 1);
-
-                ctx.stroke();
+            function clear() {
+                c = document.getElementById("myCanvas");
+                ctx = c.getContext("2d");
+                ctx.clearRect(0-100, 0-100, width+100, height+100);
             }
-            ///////////////////////////////////////////////////////////
-            
-            ctx.font = "30px Verdana";
-            var gradient = ctx.createLinearGradient(0, 0, c.width, 0);
-            gradient.addColorStop("0", "magenta");
-            gradient.addColorStop("0.5", "blue");
-            gradient.addColorStop("1.0", "red");
 
-            ctx.strokeStyle = gradient;
-            ctx.strokeText("Navigation On Delhi Map :)", 10, 50);
+
+            //<!-- This script is for mapping nodes on map(canvas) -->
+            function draw(){
+                clear();
+
+                c = document.getElementById("myCanvas");
+                ctx = c.getContext("2d");
+                
+                var data = [];
+                //console.log("list=", '{{list}}');
+                
+                // this is is from django
+                {% for i in list %}
+                var temp = '{{ i }}';
+                //console.log(temp); 
+                
+                data.push( parseFloat(temp));
+                {% endfor %}
+
+                
+                for (var i = 0; i < data.length; i++) {
+                    var lon = data[i+1];
+                    var lat = data[i];
+                    i++;
+
+
+                    var locX1 = ((lon - minLong) * (width) / (maxLong - minLong));
+                    var locY1 = ((maxLat - (lat)) * (height) / (maxLat - minLat));
+
+                    //console.log(lat, lon, locX1, locY1);
+
+                    ctx.fillRect(locX1, locY1, 1, 1);
+
+                    ctx.stroke();
+                }
+                ///////////////////////////////////////////////////////////
+                
+                ctx.font = "30px Verdana";
+                var gradient = ctx.createLinearGradient(0, 0, c.width, 0);
+                gradient.addColorStop("0", "magenta");
+                gradient.addColorStop("0.5", "blue");
+                gradient.addColorStop("1.0", "red");
+
+                ctx.strokeStyle = gradient;
+                ctx.strokeText("Navigation On Delhi Map :)", 10, 50);
+                
+            }
+            draw();
+            //setInterval(draw,1000/60);
+
+
+            ///////////////////////////////////////////////////
+            // c.onmousewheel = function (event){
+            // //function factoring(){
+            //     var mousex = event.clientX - c.offsetLeft;
+            //     var mousey = event.clientY - c.offsetTop;
+            //     var wheel = event.wheelDelta/120;//n or -n
+
+            //     var zoom = 1 + wheel/2;
+
+            //     ctx.translate(
+            //         originx,
+            //         originy
+            //     );
+            //     ctx.scale(zoom,zoom);
+            //     ctx.translate(
+            //         -( mousex / scale + originx - mousex / ( scale * zoom ) ),
+            //         -( mousey / scale + originy - mousey / ( scale * zoom ) )
+            //     );
+
+            //     originx = ( mousex / scale + originx - mousex / ( scale * zoom ) );
+            //     originy = ( mousey / scale + originy - mousey / ( scale * zoom ) );
+            //     scale *= zoom;
+            // } 
+
+            c.onmousewheel = function (event){
+                draw();
+                event.preventDefault();
+                // Get mouse offset.
+                var mousex = event.clientX - c.offsetLeft;
+                var mousey = event.clientY - c.offsetTop;
+                // Normalize wheel to +1 or -1.
+                var wheel = event.wheelDelta/120;
+                //console.log("wheel=",wheel );
+                //var wheel = 0.2;
+                // Compute zoom factor.
+                var zoom = Math.exp(wheel*zoomIntensity);
+                
+                if(wheel<0){
+                    zoom = 0.5
+                    maxLat=maxLat*(5.0/4.0);
+                    minLat=minLat*(3.0/4.0);
+
+                    maxLong=maxLat*(5.0/4.0);
+                    minLong=minLat*(3.0/4.0);
+
+
+
+                }
+                if(wheel>0){
+                    zoom = 1.5
+
+                    maxLat=maxLat*(3.0/4.0);
+                    minLat=minLat*(5.0/4.0);
+
+                    maxLong=maxLat*(3.0/4.0);
+                    minLong=minLat*(5.0/4.0);    
+                }
+                var zoom = Math.exp(wheel*zoomIntensity);
+                //console.log("zoom=",zoom );
+                
+                // Translate so the visible origin is at the ctx's origin.
+                ctx.translate(originx, originy);
+              
+                // Compute the new visible origin. Originally the mouse is at a
+                // distance mouse/scale from the corner, we want the point under
+                // the mouse to remain in the same place after the zoom, but this
+                // is at mouse/new_scale away from the corner. Therefore we need to
+                // shift the origin (coordinates of the corner) to account for this.
+                originx -= mousex/(scale*zoom) - mousex/scale;
+                originy -= mousey/(scale*zoom) - mousey/scale;
+                
+                // Scale it (centered around the origin due to the trasnslate above).
+                ctx.scale(zoom, zoom);
+                // Offset the visible origin to it's proper position.
+                ctx.translate(-originx, -originy);
+
+                // Update scale and others.
+                scale *= zoom;
+                visibleWidth = width / scale;
+                visibleHeight = height / scale;
+            }
+
+            // canvas.addEventListener('click', function() { }, false);
+            // function getMousePos(canvas, evt) {
+            //     var rect = canvas.getBoundingClientRect();
+            //     return {
+            //       x: evt.clientX - rect.left,
+            //       y: evt.clientY - rect.top
+            //     };
+            // }
+
+            // c.addEventListener('click', function() { 
+            //     var elem = document.getElementById('myCanvas'),
+            //         elemLeft = elem.offsetLeft,
+            //         elemTop = elem.offsetTop;
+            //     // console.log("elemLeft=", elemLeft, "elemTop=", elemTop);
+
+            //     var rect = c.getBoundingClientRect();
+            //     var x =event.clientX - rect.left;
+            //     var y = event.clientY - rect.top;
+            //     // console.log("x=", x, "y=", y);
+            //     // console.log("rect.left=", rect.left, "rect.top=", rect.top);
+
+            // }, false);
+
+
+            $("#OUT").on("click", function(){
+                console.log('out');
+                if(admin_level==1){
+                    alert("Cant be further Zoomed Out");
+                }
+                else{
+                    admin_level-=1;
+
+                }
+
+            });
+            
+            $("#IN").on("click", function(){
+                console.log('in');
+                if(admin_level==6){
+                    alert("Cant be further Zoomed In");
+                }
+                else{
+                    admin_level+=1;
+
+                }
+            });
+
+            var PointChooseFlag=0;
+            
+            function mark(img, event, height, width){
+                console.log("here1");
+
+                var x = Math.round(event.offsetX - width/2);
+                var y = Math.round(event.offsetY - height/2);
+                ctx.drawImage(img,x,y, height, width);
+                PointChooseFlag+=1;
+            }
+
+
+            $("#SrcDst").on("click", function(){
+                PointChooseFlag=0;
+                
+                {% load static %}
+                // console.log("static=", '{% static "img/marker.png" %}');
+                
+                var img1 = new Image();
+                img1.src ='{% static "img/src.png" %}';
+                
+                var img2 = new Image();
+                img2.src = '{% static "img/dst.png" %}';
+                
+                c.onclick = function(event){
+                       
+                        if(PointChooseFlag%2==0){
+                            mark(img1, event, 30, 30);
+                        }
+                        else{
+                            mark(img2, event, 30 , 30 );
+                        }
+                       
+                };
+
+            });
+
+            $("#Directions").on("click", function(){
+                console.log('Directions');
+            });
+
+            
             
             //////////////////////////////////////////////////////////////
 
@@ -77,21 +278,17 @@
 
             document.getElementById("OUT").style.top =  (top1+35).toString()+"px";
             document.getElementById("OUT").style.left = (left1+10).toString()+"px";
+
+            document.getElementById("SrcDst").style.top =  (top1+70).toString()+"px";
+            document.getElementById("SrcDst").style.left = (left1+10).toString()+"px";
+
+            document.getElementById("Directions").style.top =  (top1+105).toString()+"px";
+            document.getElementById("Directions").style.left = (left1+10).toString()+"px";
             
         
             ///////////////////////////////////////////////////////////////
 
             function displayNodes(data){
-
-                // var data = [];
-                // console.log("list=", '{{list}}');
-
-                // {% for i in list %}
-                //     var temp = '{{ i }}';
-                //     //console.log(temp); 
-                    
-                //     data.push( parseFloat(temp));
-                // {% endfor %}
 
                 for (var i = 0; i < data.length; i++) {
                     var lon = data[i+1];
@@ -133,7 +330,9 @@
                     ctx.stroke();
                     
                 }
-            }    
+            }
+
+
             
             
             $("body").on("click", ".list-group-item", function(){
@@ -152,9 +351,6 @@
                     list= [28.492847442626953, 77.00435638427734, 28.434986114501953, 77.05077362060547, 28.619922637939453, 77.07022094726562, 28.503517150878906, 77.20549774169922, 28.758880615234375, 77.1546401977539, 28.47164535522461, 77.49659729003906, 28.49455451965332, 77.28811645507812, 28.67414093017578, 77.44739532470703, 28.60383415222168, 77.24569702148438, 28.431650161743164, 77.00296783447266, 28.322860717773438, 77.32283782958984];
 
                     displayWays(list);
-
-
-
                     
                 });
 
@@ -162,9 +358,9 @@
                     alert( "Request failed: " + textStatus );
                 });
 
-             });
-
             });
+
+        });
         
         
         ////////////////////////////////
@@ -230,66 +426,77 @@
         .list-group-item {
             cursor: pointer
         }
+        .listing ul {
+            max-height: 200px;
+            overflow-y:scroll;
+        }
     </style>
 
 {% endblock %} 
 
 
 {% block main %}
+{% load static %}
+    <div>
+    <br><br>
+        <canvas id="myCanvas" width="1000" height="500"  style="z-index:1; border:1px solid red;">
+        </canvas>
 
-    Prefix Search:<br />
-    <div class="listing"> 
-    </div>
+        <button id="IN" type="button" class="btn btn-default btn-sm" style="z-index:2; position:absolute; ">
+              <span class="glyphicon glyphicon-zoom-in"></span> Zoom-In
+        </button>
 
-    <div id="mybox">
+        <button id="OUT" type="button" class="btn btn-default btn-sm" style="z-index:2; position:absolute; ">
+              <span class="glyphicon glyphicon-zoom-out"></span> Zoom-Out
+        </button>
+
+        
+        <button id="SrcDst" type="button" class="btn btn-default btn-sm" style="z-index:2; position:absolute; ">
+              <span class="glyphicon glyphicon-screenshot"></span> Select SRC and DST
+        </button>
+
+        <button id="Directions" type="button" class="btn btn-default btn-sm" style="z-index:2; position:absolute; ">
+              <span class="glyphicon glyphicon-road"></span> Get-Directions
+        </button>
+
+        
+
+        
+
+    </div>    
+
+    <div class="col-lg-4">
+
+        Prefix Search:<br />
+        <div class="listing"> 
+        </div>
+
+        <div id="mybox">
+        </div>
+
     </div>
     
     <div class="form-group">
-        <label for="inputdefault">Search By Name:</label>
-        
-        <input type="text" name="search_name" class="form-control" value="">
+        <div class="col-lg-4">
+            <!-- <input type="text" class="form-control" placeholder=".col-lg-2"> -->
+            <br>
+            <label for="inputdefault">Search By Name:</label>
+            
+            <input type="text" name="search_name" class="form-control" value="">
+            <br>
+            
+            <button type="button"  onclick="myCall(document.getElementsByName('search_name')[0].value)" class="btn btn-default" value="Search" />
+              <span class="glyphicon glyphicon-search"></span> Search
+            </button>
+            
 
-        <input type="button"  onclick="myCall(document.getElementsByName('search_name')[0].value)" class="btn btn-default" value="Update" />
+            <br><br>
+        </div>
+        
     </div>
 
-
-    <canvas id="myCanvas" width="1000" height="500"  style="z-index:1; border:1px solid red;">
-    </canvas>
-
-    <button id="IN" type="button" class="btn btn-default btn-sm" style="z-index:2; position:absolute; ">
-          <span class="glyphicon glyphicon-zoom-in"></span> Zoom-In
-    </button>
-
-    <button id="OUT" type="button" class="btn btn-default btn-sm" style="z-index:2; position:absolute; ">
-          <span class="glyphicon glyphicon-zoom-out"></span> Zoom-Out
-    </button>
-
-
-
-    <!-- For getting top and left of canvas -->
-   
-    <script>
-        var c = document.getElementById("myCanvas");
-        
-        var width = c.width;
-        var height = c.height;
-
-        var rect = c.getBoundingClientRect();
-        
-        var left1=rect.left + width; 
-        var top1=rect.top ;
-        console.log("left1=", left1.toString());
-        console.log("top1=", top1.toString());
-
-
-        document.getElementById("IN").style.top = (top1).toString()+"px";
-        document.getElementById("IN").style.left = (left1+10).toString()+"px";
-
-        document.getElementById("OUT").style.top =  (top1+35).toString()+"px";
-        document.getElementById("OUT").style.left = (left1+10).toString()+"px";
-        
-    </script>
-
+    <!-- <img src="{% static "img/marker.png" %}" alt="My image"/>
+ -->
 
    
 

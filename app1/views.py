@@ -10,6 +10,9 @@ import json
 import os
 import example as e
 
+################################################################
+
+#for page initial loading 
 @csrf_exempt
 def req(request):
     i=0;
@@ -40,6 +43,9 @@ def req(request):
 
     #return JsonResponse({'foo':'bar'})
 
+################################################################
+
+#for  returning list of prefix
 @csrf_exempt
 def return_list(request):
     print("request param= ", request.POST.get("search"))
@@ -73,7 +79,9 @@ def return_list(request):
     #print(t.prefix[0])
     
     return JsonResponse(response)
+################################################################
 
+#for returning info of selected name. 
 @csrf_exempt
 def data(request):
     name=request.POST.get("name")
@@ -84,7 +92,22 @@ def data(request):
     return JsonResponse({'foo':'bar'})
 
 
+################################################################
 
+#for returning rtree. 
+@csrf_exempt
+def rtree(request):
+    
+    admin_level=request.POST.get("admin_level")
+    minLat=request.POST.get("minLat")
+    minLon=request.POST.get("minLon")
+    maxLat=request.POST.get("maxLat")
+    maxLon=request.POST.get("maxLon")
+
+    return JsonResponse({'foo':'bar'})
+
+
+##################extras#####################################
 def index(request):
     return HttpResponse("Hello, world")
 
@@ -96,7 +119,8 @@ def results(request, id):
     return HttpResponse(response % id)
 
 def vote(request, id):
-    return HttpResponse("You're voting on question %s." % id)    
-  
+    return HttpResponse("You're voting on question %s." % id)   
+
+################################################################
 
      
