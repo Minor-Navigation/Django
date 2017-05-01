@@ -1,8 +1,8 @@
 <!doctype html>
 <html>
-    <head>
-        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
-        <script>
+<head>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+    <script>
 
         function myCall(name) {
             var request = $.ajax({
@@ -21,29 +21,29 @@
                 alert( "Request failed: " + textStatus );
             });
         }
-        </script>
-        <meta charset="utf-8" />
-        <title>My jQuery Ajax test</title>
-        <style type="text/css">
-            #mybox {
-                width: 300px;
-                height: 250px;
-                border: 1px solid #999;
-            }
-        </style>
+    </script>
+    <meta charset="utf-8" />
+    <title>My jQuery Ajax test</title>
+    <style type="text/css">
+        #mybox {
+            width: 300px;
+            height: 250px;
+            border: 1px solid #999;
+        }
+    </style>
 
-    </head>
+</head>
 
-    <body>
-       
-        <input type="text" name="search_name" class="form-control" value="">
-                
+<body>
+ 
+    <input type="text" name="search_name" class="form-control" value="">
+    
 
-        The following div will be updated after the call:<br />
-        <div id="mybox">
+    The following div will be updated after the call:<br />
+    <div id="mybox">
 
-        </div>
-        <input type="button" onclick="myCall(document.getElementsByName('search_name')[0].value)" value="Update" />
+    </div>
+    <input type="button" onclick="myCall(document.getElementsByName('search_name')[0].value)" value="Update" />
 
-    </body>
+</body>
 </html>

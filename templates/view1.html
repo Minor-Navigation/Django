@@ -1,43 +1,40 @@
 {% extends "base.html" %}
 {% block script %} 
 
-    <script>
+<script>
     //////////////////////////
     
-        $(document).ready(function () {
+    $(document).ready(function () {
+        var colorWay=['#e74c3c','#f1c40f', '#1abc9c', '#3498db' , '#9b59b6', '#e74c3c' , '#ff0000'];
+        var colorCountForWay=0;
+        var scale = 1;
+        var originx = 0;
+        var originy = 0;
 
-            var scale = 1;
-            var originx = 0;
-            var originy = 0;
-            
-            var admin_level=1;
+        var zoomIntensity = 1.5;
 
+        var admin_level=1;
+        var maxLat = 28.9689998626709,
+        maxLong = 77.73299407958984;
+        var minLat = 28.18301010131836,
+        minLong = 76.69200134277344;
 
-            var zoomIntensity = 1.5;
-
-            
-
-            var maxLat = 28.9689998626709,
-                maxLong = 77.73299407958984;
-            var minLat = 28.18301010131836,
-                minLong = 76.69200134277344;
-
-            var c = document.getElementById("myCanvas");
-            var width = c.width;
-            var height = c.height;
-            var ctx = c.getContext("2d");
+        var c = document.getElementById("myCanvas");
+        var width = c.width;
+        var height = c.height;
+        var ctx = c.getContext("2d");
 
 
-            var visibleWidth = width;
-            var visibleHeight = height;
-
+        var visibleWidth = width;
+        var visibleHeight = height;
+            ////////////////////////////////////////////////////////////////
             function clear() {
                 c = document.getElementById("myCanvas");
                 ctx = c.getContext("2d");
                 ctx.clearRect(0-100, 0-100, width+100, height+100);
             }
 
-
+            ////////////////////////////////////////////////////////////////
             //<!-- This script is for mapping nodes on map(canvas) -->
             function draw(){
                 clear();
@@ -132,9 +129,6 @@
 
                     maxLong=maxLat*(5.0/4.0);
                     minLong=minLat*(3.0/4.0);
-
-
-
                 }
                 if(wheel>0){
                     zoom = 1.5
@@ -150,7 +144,7 @@
                 
                 // Translate so the visible origin is at the ctx's origin.
                 ctx.translate(originx, originy);
-              
+
                 // Compute the new visible origin. Originally the mouse is at a
                 // distance mouse/scale from the corner, we want the point under
                 // the mouse to remain in the same place after the zoom, but this
@@ -194,6 +188,34 @@
             // }, false);
 
 
+            ////////////////////////////////////////////////////////////////
+            /////////////////Zoom in Zoom Out./////////////////////////////
+            function rtreeAjax(admin_level, minLat, minLon, maxLat, maxLon){
+
+                console.log("here");
+                var request = $.ajax({
+                    url: "/app1/rtree",
+                    type: "POST",
+                    data: { admin_level:admin_level, minLat: minLat, minLon:minLon, maxLat:maxLat, maxLon:maxLon} ,            
+                    dataType: "html"
+                });
+
+                request.done(function(msg) {
+                    obj = JSON.parse(msg);
+                    console.log(obj);
+
+                    // ids=obj.id;//array
+                    // names=obj.name;//array
+
+                    // console.log("response= ",ids);
+                    
+                });
+
+                request.fail(function(jqXHR, textStatus) {
+                    alert( "Request failed: " + textStatus );
+                });
+            }
+
             $("#OUT").on("click", function(){
                 console.log('out');
                 if(admin_level==1){
@@ -201,6 +223,8 @@
                 }
                 else{
                     admin_level-=1;
+                    rtreeAjax(admin_level, minLat, minLong, maxLat, maxLong)
+
 
                 }
 
@@ -213,17 +237,53 @@
                 }
                 else{
                     admin_level+=1;
+                    console.log("loccss:= ", minLat, minLong);
+                    rtreeAjax(admin_level, minLat, minLong, maxLat, maxLong)
 
                 }
             });
 
-            var PointChooseFlag=0;
+
+            //////////////////////////////////////////////////////////////////
             
+            ///////////////// Marker on Map ////////////////////////////////
+            var PointChooseFlag=0;
+
+            function astarAjax(Lat1, Lon1, Lat2, Lon2){
+
+                console.log("here");
+                var request = $.ajax({
+                    url: "/app1/astar",
+                    type: "POST",
+                    data: { Lat1: Lat1,Lon1:Lon1,Lat2:Lat2,Lon2:Lon2} ,            
+                    dataType: "html"
+                });
+
+                request.done(function(msg) {
+                    obj = JSON.parse(msg);
+                    console.log(obj);
+
+                    // ids=obj.id;//array
+                    // names=obj.name;//array
+
+                    // console.log("response= ",ids);
+                    
+                });
+
+                request.fail(function(jqXHR, textStatus) {
+                    alert( "Request failed: " + textStatus );
+                });
+            }
+
             function mark(img, event, height, width){
                 console.log("here1");
 
-                var x = Math.round(event.offsetX - width/2);
-                var y = Math.round(event.offsetY - height/2);
+                // var x = Math.round(event.offsetX - width/2);
+                // var y = Math.round(event.offsetY - height/2);
+
+                var x = Math.round(event.offsetX-3);
+                var y = Math.round(event.offsetY -height -2);
+
                 ctx.drawImage(img,x,y, height, width);
                 PointChooseFlag+=1;
             }
@@ -231,7 +291,7 @@
 
             $("#SrcDst").on("click", function(){
                 PointChooseFlag=0;
-                
+                var x1, x2, y1, y2;
                 {% load static %}
                 // console.log("static=", '{% static "img/marker.png" %}');
                 
@@ -242,14 +302,40 @@
                 img2.src = '{% static "img/dst.png" %}';
                 
                 c.onclick = function(event){
-                       
+
+                    var rect = c.getBoundingClientRect();
+                        //     var x =event.clientX - rect.left;
+                        //     var y = event.clientY - rect.top;
+                        //     // console.log("x=", x, "y=", y);
+
                         if(PointChooseFlag%2==0){
-                            mark(img1, event, 30, 30);
-                        }
-                        else{
-                            mark(img2, event, 30 , 30 );
-                        }
-                       
+                         x1 =event.clientX - rect.left;
+                         y1 = event.clientY - rect.top;
+
+                         mark(img1, event, 30, 30);
+                     }
+                     else{
+                        x2 =event.clientX - rect.left;
+                        y2 = event.clientY - rect.top;
+                        mark(img2, event, 30 , 30 );
+                        console.log("clicked locs=", x1,y1,x2, y2);
+                        
+                        //x1 = ((lon1 - minLong) * (width) / (maxLong - minLong));
+                        x1 = ((x1*(maxLong - minLong))/(width)) +  minLong;
+
+                        //y1 = ((maxLat - (lat1)) * (height) / (maxLat - minLat));
+                        y1 = (((y1*(maxLat - minLat))/(height)) -  maxLat) * (-1);
+
+                        //x2 = ((lon2 - minLong) * (width) / (maxLong - minLong));
+                        x2 = ((x2*(maxLong - minLong))/(width)) +  minLong;
+
+                        //y2 = ((maxLat - (lat2)) * (height) / (maxLat - minLat));
+                        y2 = (((y2*(maxLat - minLat))/(height)) -  maxLat) * (-1);
+
+                        astarAjax(x1, y1, x2, y2);
+
+                    }
+
                 };
 
             });
@@ -263,8 +349,8 @@
             //////////////////////////////////////////////////////////////
 
             <!-- For getting top and left of canvas -->
-       
-        
+
+
             var rect = c.getBoundingClientRect();
             
             var left1=rect.left + width; 
@@ -285,7 +371,7 @@
             document.getElementById("Directions").style.top =  (top1+105).toString()+"px";
             document.getElementById("Directions").style.left = (left1+10).toString()+"px";
             
-        
+
             ///////////////////////////////////////////////////////////////
 
             function displayNodes(data){
@@ -307,28 +393,63 @@
                 }
             }
 
-            function displayWays(list){
+            function displayWays(list, dlist){
+                var color=['#6f1984', '#e74c3c','#e80633', '#f1c40f', '#3498db' ,'#6f0b01',  '#4ef442','#9b59b6','#414ff4', '#e74c3c' , '#1abc9c', '#ff0000',];
                 
-                for (var i = 0; i < list.length -1; i++) {
-                    var lon1 = list[i+1];
-                    var lat1 = list[i];
-                    var lon2 = list[i+3];
-                    var lat2 = list[i+2];
-                    
-                    i++;
 
-                    var locX1 = ((lon1 - minLong) * (width) / (maxLong - minLong));
-                    var locY1 = ((maxLat - (lat1)) * (height) / (maxLat - minLat));
-                    var locX2 = ((lon2 - minLong) * (width) / (maxLong - minLong));
-                    var locY2 = ((maxLat - (lat2)) * (height) / (maxLat - minLat));
+                clear();
+                console.log("list=", list, "dlist=", dlist)
+                
+                //count=0;
+                if(dlist.length!=1){
+                    for (var i=0; i < dlist.length-1; i++) {
+                      
 
-                    ctx.beginPath();
-                    ctx.moveTo(locX1,locY1);
-                    ctx.lineTo(locX2,locY2);
-                    ctx.lineWidth = 2;
-                    ctx.strokeStyle = '#ff0000';
-                    ctx.stroke();
-                    
+                        var lon1 = list[2*i+1];
+                        var lat1 = list[2*i];
+                        var lon2 = list[2*i+3];
+                        var lat2 = list[2*i+2];
+                        
+                        
+                        
+
+                        var locX1 = ((lon1 - minLong) * (width) / (maxLong - minLong));
+                        var locY1 = ((maxLat - (lat1)) * (height) / (maxLat - minLat));
+                        var locX2 = ((lon2 - minLong) * (width) / (maxLong - minLong));
+                        var locY2 = ((maxLat - (lat2)) * (height) / (maxLat - minLat));
+
+                        ctx.beginPath();
+                        ctx.moveTo(locX1,locY1);
+                        ctx.lineTo(locX2,locY2);
+                        ctx.lineWidth = 2;
+                        
+                        
+                        ctx.strokeStyle = colorWay[colorCountForWay];
+                        ctx.stroke();
+
+                        // ctx.fillRect(locX1, locY1, 1, 1);
+                        // ctx.stroke();
+
+                        // ctx.fillRect(locX2, locY2, 1, 1);
+                        // ctx.stroke();
+
+                        if(dlist[i+1]==1){
+                            //break;
+                            i+=1;
+                            
+                            colorCountForWay+=1;
+                            if(colorCountForWay == colorWay.length){
+                                colorCountForWay=0;
+                            }
+
+                        }
+                        
+                    }
+                }                
+
+                colorCountForWay+=1;
+                if(colorCountForWay == colorWay.length){
+                    colorCountForWay=0;
                 }
             }
 
@@ -348,9 +469,14 @@
                 request.done(function(msg) {
                     obj = JSON.parse(msg);
                     console.log("obj= ",obj);
-                    list= [28.492847442626953, 77.00435638427734, 28.434986114501953, 77.05077362060547, 28.619922637939453, 77.07022094726562, 28.503517150878906, 77.20549774169922, 28.758880615234375, 77.1546401977539, 28.47164535522461, 77.49659729003906, 28.49455451965332, 77.28811645507812, 28.67414093017578, 77.44739532470703, 28.60383415222168, 77.24569702148438, 28.431650161743164, 77.00296783447266, 28.322860717773438, 77.32283782958984];
+                    
+                    var way_list=obj.way_list;
+                    var dlist=obj.dlist;
+                    //longs=obj.long;
+                    
+                    //list= [28.492847442626953, 77.00435638427734, 28.434986114501953, 77.05077362060547, 28.619922637939453, 77.07022094726562, 28.503517150878906, 77.20549774169922, 28.758880615234375, 77.1546401977539, 28.47164535522461, 77.49659729003906, 28.49455451965332, 77.28811645507812, 28.67414093017578, 77.44739532470703, 28.60383415222168, 77.24569702148438, 28.431650161743164, 77.00296783447266, 28.322860717773438, 77.32283782958984];
 
-                    displayWays(list);
+                    displayWays(way_list, dlist);
                     
                 });
 
@@ -361,8 +487,8 @@
             });
 
         });
-        
-        
+
+
         ////////////////////////////////
 
         function listing(names, ids) {
@@ -385,23 +511,23 @@
         function myCall(name) {
             console.log("here");
             var request = $.ajax({
-                    url: "/app1/list",
-                    type: "POST",
-                    data: { search: name } ,            
-                    dataType: "html"
+                url: "/app1/list",
+                type: "POST",
+                data: { search: name } ,            
+                dataType: "html"
             });
 
             request.done(function(msg) {
                 obj = JSON.parse(msg);
-                ids=obj.id;
-                names=obj.name;
+                ids=obj.way_ids;
+                names=obj.way_names;
 
                 console.log("response= ",ids);
                 console.log("response= ",names);
                 $("#mybox").html(msg);
 
                 $('.listing').html(listing(names, ids));
-            
+
 
             });
 
@@ -412,92 +538,92 @@
 
 
     //////////////////////
-    </script>
+</script>
 
-    <meta charset="utf-8" />
-    <title>MinorProject</title>
-    
-    <style type="text/css">
-        #mybox {
-            width: 300px;
-            height: 200px;
-            border: 1px solid #999;
-        }
-        .list-group-item {
-            cursor: pointer
-        }
-        .listing ul {
-            max-height: 200px;
-            overflow-y:scroll;
-        }
-    </style>
+<meta charset="utf-8" />
+<title>MinorProject</title>
+
+<style type="text/css">
+    #mybox {
+        width: 300px;
+        height: 200px;
+        border: 1px solid #999;
+    }
+    .list-group-item {
+        cursor: pointer
+    }
+    .listing ul {
+        max-height: 200px;
+        overflow-y:scroll;
+    }
+</style>
 
 {% endblock %} 
 
 
 {% block main %}
 {% load static %}
-    <div>
+<div>
     <br><br>
-        <canvas id="myCanvas" width="1000" height="500"  style="z-index:1; border:1px solid red;">
-        </canvas>
+    <canvas id="myCanvas" width="1000" height="500"  style="z-index:1; border:1px solid red;">
+    </canvas>
 
-        <button id="IN" type="button" class="btn btn-default btn-sm" style="z-index:2; position:absolute; ">
-              <span class="glyphicon glyphicon-zoom-in"></span> Zoom-In
-        </button>
+    <button id="IN" type="button" class="btn btn-default btn-sm" style="z-index:2; position:absolute; ">
+      <span class="glyphicon glyphicon-zoom-in"></span> Zoom-In
+  </button>
 
-        <button id="OUT" type="button" class="btn btn-default btn-sm" style="z-index:2; position:absolute; ">
-              <span class="glyphicon glyphicon-zoom-out"></span> Zoom-Out
-        </button>
+  <button id="OUT" type="button" class="btn btn-default btn-sm" style="z-index:2; position:absolute; ">
+      <span class="glyphicon glyphicon-zoom-out"></span> Zoom-Out
+  </button>
 
-        
-        <button id="SrcDst" type="button" class="btn btn-default btn-sm" style="z-index:2; position:absolute; ">
-              <span class="glyphicon glyphicon-screenshot"></span> Select SRC and DST
-        </button>
 
-        <button id="Directions" type="button" class="btn btn-default btn-sm" style="z-index:2; position:absolute; ">
-              <span class="glyphicon glyphicon-road"></span> Get-Directions
-        </button>
+  <button id="SrcDst" type="button" class="btn btn-default btn-sm" style="z-index:2; position:absolute; ">
+      <span class="glyphicon glyphicon-screenshot"></span> Select SRC and DST
+  </button>
 
-        
+  <button id="Directions" type="button" class="btn btn-default btn-sm" style="z-index:2; position:absolute; ">
+      <span class="glyphicon glyphicon-road"></span> Get-Directions
+  </button>
 
-        
 
-    </div>    
 
+
+
+</div>    
+
+<div class="col-lg-4">
+
+    Prefix Search:<br />
+    <div class="listing"> 
+    </div>
+
+    <div id="mybox">
+    </div>
+
+</div>
+
+<div class="form-group">
     <div class="col-lg-4">
+        <!-- <input type="text" class="form-control" placeholder=".col-lg-2"> -->
+        <br>
+        <label for="inputdefault">Search By Name:</label>
 
-        Prefix Search:<br />
-        <div class="listing"> 
-        </div>
+        <input type="text" name="search_name" class="form-control" value="">
+        <br>
 
-        <div id="mybox">
-        </div>
+        <button type="button"  onclick="myCall(document.getElementsByName('search_name')[0].value)" class="btn btn-default" value="Search" />
+        <span class="glyphicon glyphicon-search"></span> Search
+    </button>
 
-    </div>
-    
-    <div class="form-group">
-        <div class="col-lg-4">
-            <!-- <input type="text" class="form-control" placeholder=".col-lg-2"> -->
-            <br>
-            <label for="inputdefault">Search By Name:</label>
-            
-            <input type="text" name="search_name" class="form-control" value="">
-            <br>
-            
-            <button type="button"  onclick="myCall(document.getElementsByName('search_name')[0].value)" class="btn btn-default" value="Search" />
-              <span class="glyphicon glyphicon-search"></span> Search
-            </button>
-            
 
-            <br><br>
-        </div>
-        
-    </div>
+    <br><br>
+</div>
+
+</div>
 
     <!-- <img src="{% static "img/marker.png" %}" alt="My image"/>
- -->
+-->
 
-   
+
 
 {% endblock %}

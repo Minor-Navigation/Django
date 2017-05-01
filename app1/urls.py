@@ -17,6 +17,7 @@ urlpatterns = [
     url(r'^req$', req),
     url(r'^data$', data),
     url(r'^rtree$', rtree),
+    url(r'^astar$', astar),
     url(r'^extra$', generic.TemplateView.as_view(template_name='extra.html')),
     url(r'^list$', return_list),
     

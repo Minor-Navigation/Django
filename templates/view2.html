@@ -2,18 +2,18 @@
 
 {% block script %} 
 
-    	$.post("/rmi_servlet/FileServlet", $.param(params), function(response) {
-    	    editor_text=String(response)
+$.post("/rmi_servlet/FileServlet", $.param(params), function(response) {
+    editor_text=String(response)
 
-    	    var editor = ace.edit("editor");
-    	    
-    	    editor.setTheme("ace/theme/xcode");
-    	    editor.getSession().setMode("ace/mode/javascript");
-    	    
-    	    editor.setValue(editor_text)
-    	});
-			        
-			     
+    var editor = ace.edit("editor");
+
+    editor.setTheme("ace/theme/xcode");
+    editor.getSession().setMode("ace/mode/javascript");
+
+    editor.setValue(editor_text)
+});
+
+
 {% endblock %} 
 
 {% block main %}
