@@ -104,32 +104,40 @@ def data(request):
     response = {'way_list': [], 'dlist': [], 'node_list':[], 'type': "none"}
     
     name=request.POST.get("name")
+    Type=request.POST.get("type")
     
     t=e.trie()
-    w=t.search_trie(name)
-    n=t.search_trie_node(name)
-    #print("w=",w.getid())
-    print("w=",w.wayptr)
-
-    if(n.nodeptr >= 0):
-        t.node_with_nodeid(n.nodeptr)
-        for i in t.lat_list:
-            node_list.append(float(i))
-
-    if(n.nodeptr >= 0):
-        t.node_with_wayid(w.wayptr)
-        for i in t.lat_list:
-            #print (i)
-            way_list.append(float(i))
-        for i in t.delimiter_list:
-            #print (i)
-            dlist.append(float(i))
+    if(Type=="nodes"):
+        print("nodes inside")
+        response['type']=Type
+        n=t.search_trie_node(name)
+        if(n.nodeptr >= 0):
+            t.node_with_nodeid(n.nodeptr)
+            for i in t.lat_list:
+                node_list.append(float(i)) 
+    
+    elif(Type=="ways"):
+        print("ways inside")
+    
+        response['type']=Type
+        w=t.search_trie(name)
+        #print("w=",w.getid())
+        #print("w=",w.wayptr)
+        if(w.wayptr >= 0):
+            t.node_with_wayid(w.wayptr)
+            for i in t.lat_list:
+                #print (i)
+                way_list.append(float(i))
+            for i in t.delimiter_list:
+                #print (i)
+                dlist.append(float(i))
         
     
-    print("lat=", t.lat_list, "\ndlist=", t.delimiter_list)
-    print("nodelist", node_list)
+    # print("lat=", t.lat_list, "\ndlist=", t.delimiter_list)
+    # print("nodelist", node_list)
 
     #response['long']=t.long_list
+
     response['way_list']=way_list
     response['dlist']=dlist
     response['node_list']=node_list

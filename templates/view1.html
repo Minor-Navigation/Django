@@ -3,7 +3,9 @@
 
 <script>
     //////////////////////////
-    
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
     $(document).ready(function () {
         var colorWay=['#e74c3c','#f1c40f', '#1abc9c', '#3498db' , '#9b59b6', '#e74c3c' , '#ff0000'];
         var colorCountForWay=0;
@@ -374,30 +376,29 @@
 
             ///////////////////////////////////////////////////////////////
 
-            function displayNodes(data){
-
-                for (var i = 0; i < data.length; i++) {
+            function displayNodes(data, img1){
+                clear();
+                
+                //console.log("nodes inside inside, data=", data);
+                
+                for (var i = 0; i < data.length; i+=2) {
                     var lon = data[i+1];
                     var lat = data[i];
-                    i++;
-
-
                     var locX1 = ((lon - minLong) * (width) / (maxLong - minLong));
                     var locY1 = ((maxLat - (lat)) * (height) / (maxLat - minLat));
 
                     //console.log(lat, lon, locX1, locY1);
+                    var x = Math.round(locX1- 30/2);
+                    var y = Math.round(locY1 - 30);
 
-                    ctx.fillRect(locX1, locY1, 1, 1);
-
-                    ctx.stroke();
+                    ctx.drawImage(img1,x,y, 30, 30);
                 }
             }
 
             function displayWays(list, dlist){
+                clear();
                 var color=['#6f1984', '#e74c3c','#e80633', '#f1c40f', '#3498db' ,'#6f0b01',  '#4ef442','#9b59b6','#414ff4', '#e74c3c' , '#1abc9c', '#ff0000',];
                 
-
-                clear();
                 console.log("list=", list, "dlist=", dlist)
                 
                 //count=0;
@@ -457,26 +458,40 @@
             
             
             $("body").on("click", ".list-group-item", function(){
-                console.log('id of clicked item= ', this.id);
+
+                var parent=$(this).parent();
+                var type = parent.attr("id");
+                //console.log("parent=", parent);
+
+                //console.log('id of clicked item= ', this.id, "name of selected item=", parent.attr("id"));
+                var img1 = new Image();
+                img1.src ='{% static "img/pin.png" %}';
 
                 var request = $.ajax({
                     url: "/app1/data",
                     type: "POST",
-                    data: { name: this.id } ,            
+                    data: { name: this.id, type:type } ,            
                     dataType: "html"
                 });
 
                 request.done(function(msg) {
                     obj = JSON.parse(msg);
-                    console.log("obj= ",obj);
+                    //console.log("obj= ",obj);
                     
                     var way_list=obj.way_list;
                     var dlist=obj.dlist;
+                    var node_list=obj.node_list;
                     //longs=obj.long;
                     
                     //list= [28.492847442626953, 77.00435638427734, 28.434986114501953, 77.05077362060547, 28.619922637939453, 77.07022094726562, 28.503517150878906, 77.20549774169922, 28.758880615234375, 77.1546401977539, 28.47164535522461, 77.49659729003906, 28.49455451965332, 77.28811645507812, 28.67414093017578, 77.44739532470703, 28.60383415222168, 77.24569702148438, 28.431650161743164, 77.00296783447266, 28.322860717773438, 77.32283782958984];
-
-                    displayWays(way_list, dlist);
+                    if(type=="nodes"){
+                        console.log("nodes inside");
+                       displayNodes(node_list, img1); 
+                    }
+                    else if(type=="ways"){
+                        console.log("ways inside");
+                        displayWays(way_list, dlist);    
+                    }
                     
                 });
 
@@ -491,19 +506,38 @@
 
         ////////////////////////////////
 
-        function listing(names, ids) {
-            var ul = $('<ul class="list-group" id="ways"  />');
+        function listing(way_names, way_ids,node_names, node_ids) {
+            var div = $('<div/>');
+            var h1 = $('<h4>Ways:</h4>');
+            if(way_names.length!=0){
+                div.append(h1);
+            }
 
-            for(var i=0 ;i<names.length; i++){
-                console.log(ids[i]);
-                var li = $('<li class="list-group-item"/>').appendTo(ul);
-                li.attr("id", names[i]);
-                //li.attr("name", names[i]);
-                var t =names[i];
+
+            var ul1 = $('<ul class="list-group" id="ways"  />').appendTo(div);
+            for(var i=0 ;i<way_names.length; i++){
+                var li = $('<li class="list-group-item" name="way"/>').appendTo(ul1);
+                li.attr("id", way_names[i]);
+                var t =way_names[i];
                 li.append(t);
             }
 
-            return ul;
+            var h2 = $('<h4>Nodes:</h4>');
+            if(node_names.length!=0){
+                div.append(h2);
+            }
+
+            var ul2 = $('<ul class="list-group" id="nodes"  />').appendTo(div);
+
+            for(var i=0 ;i<node_names.length; i++){
+                var li = $('<li class="list-group-item" name="node"/>').appendTo(ul2);
+                li.attr("id", node_names[i]);
+                var t =node_names[i];
+                li.append(t);
+            }
+
+
+            return div;
         }
 
         ///////////////////////////
@@ -519,14 +553,20 @@
 
             request.done(function(msg) {
                 obj = JSON.parse(msg);
-                ids=obj.way_ids;
-                names=obj.way_names;
+                way_ids=obj.way_ids;
+                way_names=obj.way_names;
+                
+                node_ids=obj.node_ids;
+                node_names=obj.node_names;
 
-                console.log("response= ",ids);
-                console.log("response= ",names);
+
+                console.log("response= ",way_ids);
+                console.log("response= ",way_names);
+                console.log("response= ",node_ids);
+                console.log("response= ",node_names);
                 $("#mybox").html(msg);
 
-                $('.listing').html(listing(names, ids));
+                $('.listing').html(listing(way_names, way_ids,node_names, node_ids));
 
 
             });
@@ -552,7 +592,7 @@
     .list-group-item {
         cursor: pointer
     }
-    .listing ul {
+    .listing div ul {
         max-height: 200px;
         overflow-y:scroll;
     }
