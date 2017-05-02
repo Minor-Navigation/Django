@@ -169,13 +169,20 @@ def rtree(request):
 #for returning shortest path. 
 @csrf_exempt
 def astar(request):
+    typeOfAstar=int(request.POST.get("type"))
+    if(typeOfAstar==1): #point pick on map
+        Lat1=float(request.POST.get("Lat1"))
+        Lon1=float(request.POST.get("Lon1"))
+        Lat2=float(request.POST.get("Lat2"))
+        Lon2=float(request.POST.get("Lon2"))
+        print("astar", Lat1, Lon1, Lat2, Lon2)
+        return JsonResponse({'foo':'bar'})
     
-    Lat1=request.POST.get("Lat1")
-    Lon1=request.POST.get("Lon1")
-    Lat2=request.POST.get("Lat2")
-    Lon2=request.POST.get("Lon2")
-    print("astar", Lat1, Lon1, Lat2, Lon2)
-    return JsonResponse({'foo':'bar'})    
+    elif(typeOfAstar==2):  #by name search 
+        srcId=long(float(request.POST.get("srcId")))
+        dstId=long(float(request.POST.get("dstId")))
+        print("astar", srcId, dstId)
+        return JsonResponse({'foo':'bar'})     
 
 
 ##################extras#####################################
