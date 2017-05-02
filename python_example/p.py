@@ -16,9 +16,9 @@ t.node_with_nodeid(n.nodeptr)
 print(t.lat_list)
 
 t.close()
-"""
-r=e.rtree(89816,"test.txt")
-r.boundingBox(77.1780,77.2652,28.5985,28.6424,1)
+ #rtree r(490811040,"test.txt");
+r=e.rtree(490811040,"test.txt")
+r.boundingBox(77.1780,77.2652,28.5985,28.6424,4);
 for i in r.nodes_in_box:
 	print(i)
-"""
+

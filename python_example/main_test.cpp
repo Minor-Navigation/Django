@@ -432,11 +432,51 @@ public:
     }
 } node;
 
+
+
+class nodeInd{
+public:
+    ll id,ptr,adjPtr;
+    int size;
+};
+
+class nodeData {
+public:
+    ll id;
+    double lon,lat;
+    vector<ll> adj,adjPtr;
+    char* otherData;
+} ;
+
+
+
+class adj_list{
+public:
+    ll main_id;
+    double main_long,main_lat;
+    vector<ll> node_id;
+    vector<double>node_long,node_lat;
+    adjlist(){
+        main_id=-1;
+        main_lat=-1;
+        main_long=-1;
+    }
+    push_list(ll id,double lon, double lat){
+        node_id.push_back(id);
+        node_long.push_back(lon);
+        node_lat.push_back(lat);
+    }
+};
+
+
+PYBIND11_MAKE_OPAQUE(std::vector<adj_list >);
+
 class rtree{
 
 
 public:
     vector<ll> nodes_in_box;
+    vector< adj_list > adjlist;
     ll root;
     fstream file;
 
@@ -504,6 +544,149 @@ public:
         boundingBox_(lo1,lo2,la1,la2,level,root);
     }
 
+
+
+    nodeData queryNode(ll id)
+    {
+
+        fstream f,f1,f2;
+        nodeData nd;
+        f.open("/home/arjun/Desktop/MajorProjectMap/Django/app1/NodeIndexNew.ind",ios::in | ios::out | ios::binary); 
+        f1.open("/home/arjun/Desktop/MajorProjectMap/Django/app1/CompleteNodeData.dat",ios::in | ios::out | ios::binary); 
+        f2.open("/home/arjun/Desktop/MajorProjectMap/Django/app1/adjacency.dat",ios::in | ios::out | ios::binary); 
+        char *res = NULL;
+
+        f.seekg(0,ios::end);
+        ll no_nodes=f.tellg();
+        nodeInd in;
+        no_nodes/=sizeof(nodeInd);
+        int size;
+        ll temp;
+        ll s=0,e=no_nodes-1,m;
+        while(s<=e)
+        {
+            m=(s+e)/2;
+            f.seekg(m*sizeof(nodeInd));f.seekp(m*sizeof(nodeInd));
+            f.read((char*)&in,sizeof(nodeInd));
+            if(in.id==id)
+            {
+                //cout<<"Found";
+                nd.otherData= new char[in.size];
+                f1.seekg(in.ptr);f1.seekp(in.ptr);
+                f1.read(nd.otherData,in.size);
+
+                f2.seekg(in.adjPtr);f2.seekp(in.adjPtr);
+                f2>>nd.id>>nd.lon>>nd.lat>>size;
+                while(size--)
+                {
+                    f2>>temp;
+                    nd.adj.pb(temp);
+                    f2>>temp;
+                    nd.adjPtr.pb(temp);
+                }
+
+                return nd;
+            }
+            if(in.id<id)
+                s=m+1;
+            else
+                e=m-1;
+
+        }
+        nd.id=-1;
+        
+        return nd;
+
+    }
+
+    nodeData queryNode(ll id ,ll ptr)
+    {
+
+        fstream f,f1,f2;
+        nodeData nd;
+        f.open("/home/arjun/Desktop/MajorProjectMap/Django/app1/NodeIndexNew.ind",ios::in | ios::out | ios::binary); 
+        f1.open("/home/arjun/Desktop/MajorProjectMap/Django/app1/CompleteNodeData.dat",ios::in | ios::out | ios::binary); 
+        f2.open("/home/arjun/Desktop/MajorProjectMap/Django/app1/adjacency.dat",ios::in | ios::out | ios::binary); 
+        char *res = NULL;
+
+        nodeInd in;
+        int size;
+        ll temp;
+
+    
+        f.seekg(ptr);f.seekp(ptr);
+        f.read((char*)&in,sizeof(nodeInd));
+        if(in.id==id)
+        {
+            //cout<<"Found";
+            nd.otherData= new char[in.size];
+            f1.seekg(in.ptr);f1.seekp(in.ptr);
+            f1.read(nd.otherData,in.size);
+
+            f2.seekg(in.adjPtr);f2.seekp(in.adjPtr);
+            f2>>nd.id>>nd.lon>>nd.lat>>size;
+            while(size--)
+            {
+                f2>>temp;
+                nd.adj.pb(temp);
+                f2>>temp;
+                nd.adjPtr.pb(temp);
+            }
+
+            return nd;
+        }
+        nd.id=-1;
+        
+        return nd;
+
+    }
+
+
+
+    void get_adj_list(){
+        adjlist.clear();
+
+        nodeData nd;
+        
+        //map< ll , ll> visited;
+
+        for(int i=0;i<nodes_in_boxes.size();i++){
+
+            nd=queryNode(nodes_in_boxes[i]);
+            //if(map[nd.id]==1){continue;}
+            //visited[nd.id]=1;
+            adj_list temp;
+            temp.main_id=nd.id;
+            temp.main_long=nd.lon;
+            temp.main_lat=nd.lat;
+
+
+
+            //cout<<temp.main_id<< "   "<<nd.adj.size()<<endl;
+
+
+            for(int j=0;j<nd.adjPtr.size();j++){
+
+                nodeData md;
+                md=queryNode(nd.adj[j],nd.adjPtr[j]);
+                temp.push_list(md.id,md.lon,md.lat);
+
+            //  cout<<temp.node_id[j]<<"  ";
+
+            }
+            //cout<<endl;
+            adjlist.pb(temp);
+
+
+        }   
+
+        return; 
+    
+    }
+
+
+
+
 };
 
 
@@ -559,10 +742,20 @@ PYBIND11_PLUGIN(example) {
     py::class_<rtree>(m,"rtree")
     .def(py::init<long long ,string>())
     .def("boundingBox", &rtree::boundingBox)
+    .def("get_adj_list", &rtree::get_adj_list)
     .def_readwrite("nodes_in_box", &rtree::nodes_in_box)
+    .def_readwrite("adjlist", &rtree::adjlist)
     .def_readwrite("root", &rtree::root);
 
-
+    py::class_<adj_list>(m,"adj_list")
+    .def(py::init())
+    .def_readwrite("main_id", &adj_list::main_id)
+    .def_readwrite("main_long", &adj_list::main_long)
+    .def_readwrite("main_lat", &adj_list::main_lat)
+    .def_readwrite("node_id", &adj_list::node_id)
+    .def_readwrite("node_long", &adj_list::node_long)
+    .def_readwrite("node_lat", &adj_list::node_lat);
+    py::bind_vector<std::vector<adj_list>>(m, "adj_list");
 
 
 #ifdef VERSION_INFO

@@ -50,6 +50,7 @@ def req(request):
 def return_list(request):
     print("request param= ", request.POST.get("search"))
     prefix=request.POST.get("search")
+    typeOfReq=int(request.POST.get("type"))
 
     response = {'way_names': [], 'way_ids': [],'node_names': [], 'node_ids': [],  }
     way_names = []
@@ -63,13 +64,14 @@ def return_list(request):
     st=str(prefix)
     #print ("st=", st);
 
-    t.display_prefix(st,len(st),0)
-    for i in t.list:
-        #print (i)
-        way_ids.append(int(i))
-    for i in t.prefix:
-        #print (i)
-        way_names.append(i)
+    if(typeOfReq==1):
+        t.display_prefix(st,len(st),0)
+        for i in t.list:
+            #print (i)
+            way_ids.append(int(i))
+        for i in t.prefix:
+            #print (i)
+            way_names.append(i)
 
 
     t.display_prefix_node(st,len(st),0)

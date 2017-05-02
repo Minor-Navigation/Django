@@ -7,6 +7,17 @@
       return new Promise(resolve => setTimeout(resolve, ms));
     }
     $(document).ready(function () {
+        $("#MarkingRadio").hide();
+        $("#NameSearchRadio").hide();
+        
+        $("#SearchByNameDiv1").hide();
+        $("#SearchByNameDiv2").hide();
+
+        $("#SearchByNameForDirDiv1").hide();
+        $("#SearchByNameForDirDiv2").hide();
+
+        NameSearchRadioCheck=0
+
         var colorWay=['#e74c3c','#f1c40f', '#1abc9c', '#3498db' , '#9b59b6', '#e74c3c' , '#ff0000'];
         var colorCountForWay=0;
         var scale = 1;
@@ -278,7 +289,7 @@
             }
 
             function mark(img, event, height, width){
-                console.log("here1");
+                //console.log("here1,PointChooseFlag", PointChooseFlag);
 
                 // var x = Math.round(event.offsetX - width/2);
                 // var y = Math.round(event.offsetY - height/2);
@@ -290,19 +301,47 @@
                 PointChooseFlag+=1;
             }
 
+            // $("#hide").click(function(){
+            //     $("#SearchByNameDiv1").hide();
+            //     $("#SearchByNameDiv2").hide();
+            // });
 
-            $("#SrcDst").on("click", function(){
+            // $("#show").click(function(){
+            //     $("p").show();
+            // });
+            
+            $("#SearchByName").on("click", function(){
+                $("#SearchByNameDiv1").show();
+                $("#SearchByNameDiv2").show();
+                
+                // document.getElementById('MarkingRadio').checked = false;
+                // document.getElementById('NameSearchRadio').checked = false;
+
+                $("#MarkingRadio").hide();
+                $("#NameSearchRadio").hide();
+                $("#SearchByNameForDirDiv1").hide();
+                $("#SearchByNameForDirDiv2").hide();
+                
+                 
+            });
+
+            $("#MarkingRadio").on("click", function(){
+                NameSearchRadioCheck=0;
+                $("#SearchByNameForDirDiv1").hide();
+                $("#SearchByNameForDirDiv2").hide();
+
                 PointChooseFlag=0;
                 var x1, x2, y1, y2;
                 {% load static %}
                 // console.log("static=", '{% static "img/marker.png" %}');
                 
+                
+
                 var img1 = new Image();
                 img1.src ='{% static "img/src.png" %}';
                 
                 var img2 = new Image();
                 img2.src = '{% static "img/dst.png" %}';
-                
                 c.onclick = function(event){
 
                     var rect = c.getBoundingClientRect();
@@ -342,9 +381,45 @@
 
             });
 
-            $("#Directions").on("click", function(){
-                console.log('Directions');
+            $("#NameSearchRadio").on("click", function(){
+                NameSearchRadioCheck=1;
+                $("#SearchByNameForDirDiv1").show();
+                $("#SearchByNameForDirDiv2").show();
+                
+
             });
+
+
+            $("#SrcDst").on("click", function(){
+                $("#MarkingRadio").show();
+                $("#NameSearchRadio").show();
+
+                $("#SearchByNameDiv1").hide();
+                $("#SearchByNameDiv2").hide();
+
+
+                if(NameSearchRadioCheck==1) {
+                    //console.log("checked radio");
+                    $("#SearchByNameForDirDiv1").show();
+                    $("#SearchByNameForDirDiv2").show();
+
+                }
+                else{
+                    //console.log("unchecked radio");
+                    $("#SearchByNameForDirDiv1").hide();
+                    $("#SearchByNameForDirDiv2").hide();
+                }
+                
+                
+                
+
+               
+
+            });
+
+            // $("#Directions").on("click", function(){
+            //     console.log('Directions');
+            // });
 
             
             
@@ -360,6 +435,7 @@
             console.log("left1=", left1.toString());
             console.log("top1=", top1.toString());
 
+            
 
             document.getElementById("IN").style.top = (top1).toString()+"px";
             document.getElementById("IN").style.left = (left1+10).toString()+"px";
@@ -367,11 +443,23 @@
             document.getElementById("OUT").style.top =  (top1+35).toString()+"px";
             document.getElementById("OUT").style.left = (left1+10).toString()+"px";
 
-            document.getElementById("SrcDst").style.top =  (top1+70).toString()+"px";
+            document.getElementById("SearchByName").style.top =  (top1+70).toString()+"px";
+            document.getElementById("SearchByName").style.left = (left1+10).toString()+"px";
+
+            document.getElementById("SrcDst").style.top =  (top1+105).toString()+"px";
             document.getElementById("SrcDst").style.left = (left1+10).toString()+"px";
 
-            document.getElementById("Directions").style.top =  (top1+105).toString()+"px";
-            document.getElementById("Directions").style.left = (left1+10).toString()+"px";
+            // document.getElementById("Directions").style.top =  (top1+140).toString()+"px";
+            // document.getElementById("Directions").style.left = (left1+10).toString()+"px";
+            
+            // MarkingRadio
+            // NameSearchRadio
+            document.getElementById("MarkingRadio").style.top =  (top1+140).toString()+"px";
+            document.getElementById("MarkingRadio").style.left = (left1+20).toString()+"px";
+
+            document.getElementById("NameSearchRadio").style.top =  (top1+170).toString()+"px";
+            document.getElementById("NameSearchRadio").style.left = (left1+10).toString()+"px";
+            
             
 
             ///////////////////////////////////////////////////////////////
@@ -511,30 +599,32 @@
             var h1 = $('<h4>Ways:</h4>');
             if(way_names.length!=0){
                 div.append(h1);
+                var ul1 = $('<ul class="list-group" id="ways"  />').appendTo(div);
+                for(var i=0 ;i<way_names.length; i++){
+                    var li = $('<li class="list-group-item" name="way"/>').appendTo(ul1);
+                    li.attr("id", way_names[i]);
+                    var t =way_names[i];
+                    li.append(t);
+                }
             }
 
 
-            var ul1 = $('<ul class="list-group" id="ways"  />').appendTo(div);
-            for(var i=0 ;i<way_names.length; i++){
-                var li = $('<li class="list-group-item" name="way"/>').appendTo(ul1);
-                li.attr("id", way_names[i]);
-                var t =way_names[i];
-                li.append(t);
-            }
+            
 
             var h2 = $('<h4>Nodes:</h4>');
             if(node_names.length!=0){
                 div.append(h2);
+                var ul2 = $('<ul class="list-group" id="nodes"  />').appendTo(div);
+
+                for(var i=0 ;i<node_names.length; i++){
+                    var li = $('<li class="list-group-item" name="node"/>').appendTo(ul2);
+                    li.attr("id", node_names[i]);
+                    var t =node_names[i];
+                    li.append(t);
+                }
             }
 
-            var ul2 = $('<ul class="list-group" id="nodes"  />').appendTo(div);
-
-            for(var i=0 ;i<node_names.length; i++){
-                var li = $('<li class="list-group-item" name="node"/>').appendTo(ul2);
-                li.attr("id", node_names[i]);
-                var t =node_names[i];
-                li.append(t);
-            }
+            
 
 
             return div;
@@ -542,12 +632,12 @@
 
         ///////////////////////////
 
-        function myCall(name) {
-            console.log("here");
+        function myCall(name, type) {
+            console.log("here", "type in my call=", type);
             var request = $.ajax({
                 url: "/app1/list",
                 type: "POST",
-                data: { search: name } ,            
+                data: { search: name, type: type } ,            
                 dataType: "html"
             });
 
@@ -564,9 +654,17 @@
                 console.log("response= ",way_names);
                 console.log("response= ",node_ids);
                 console.log("response= ",node_names);
-                $("#mybox").html(msg);
+                //$("#mybox").html(msg);
 
-                $('.listing').html(listing(way_names, way_ids,node_names, node_ids));
+                if(type==1){
+                    $('.listing1').html(listing(way_names, way_ids,node_names, node_ids));
+                }
+                else if(type==2){
+                    $('.listing2').html(listingDir(node_names, node_ids));
+                }  
+                
+                
+                
 
 
             });
@@ -584,15 +682,19 @@
 <title>MinorProject</title>
 
 <style type="text/css">
-    #mybox {
+    /*#mybox {
         width: 300px;
         height: 200px;
         border: 1px solid #999;
-    }
+    }*/
     .list-group-item {
         cursor: pointer
     }
-    .listing div ul {
+    .listing1 div ul {
+        max-height: 200px;
+        overflow-y:scroll;
+    }
+    .listing2 div ul {
         max-height: 200px;
         overflow-y:scroll;
     }
@@ -604,7 +706,6 @@
 {% block main %}
 {% load static %}
 <div>
-    <br><br>
     <canvas id="myCanvas" width="1000" height="500"  style="z-index:1; border:1px solid red;">
     </canvas>
 
@@ -616,14 +717,30 @@
       <span class="glyphicon glyphicon-zoom-out"></span> Zoom-Out
   </button>
 
+  <button id="SearchByName" type="button" class="btn btn-default btn-sm" style="z-index:2; position:absolute; ">
+     <span class="glyphicon glyphicon-search"></span> Search By Name
+  </button>
 
   <button id="SrcDst" type="button" class="btn btn-default btn-sm" style="z-index:2; position:absolute; ">
       <span class="glyphicon glyphicon-screenshot"></span> Select SRC and DST
   </button>
 
-  <button id="Directions" type="button" class="btn btn-default btn-sm" style="z-index:2; position:absolute; ">
+  <!-- <button id="Directions" type="button" class="btn btn-default btn-sm" style="z-index:2; position:absolute; ">
       <span class="glyphicon glyphicon-road"></span> Get-Directions
   </button>
+ -->
+
+ <!-- <form> -->
+    <label id="MarkingRadio" class="radio-inline" style="z-index:2; position:absolute;">
+      <input type="radio" name="optradio">Marking Point On Map
+    </label>
+
+    <label id="NameSearchRadio" class="radio-inline" style="z-index:2; position:absolute;">
+      <input type="radio" name="optradio">Searching By Name
+    </label>
+
+    
+  <!-- </form> -->
 
 
 
@@ -631,18 +748,9 @@
 
 </div>    
 
-<div class="col-lg-4">
 
-    Prefix Search:<br />
-    <div class="listing"> 
-    </div>
 
-    <div id="mybox">
-    </div>
-
-</div>
-
-<div class="form-group">
+<div id="SearchByNameDiv1"class="form-group">
     <div class="col-lg-4">
         <!-- <input type="text" class="form-control" placeholder=".col-lg-2"> -->
         <br>
@@ -651,19 +759,79 @@
         <input type="text" name="search_name" class="form-control" value="">
         <br>
 
-        <button type="button"  onclick="myCall(document.getElementsByName('search_name')[0].value)" class="btn btn-default" value="Search" />
-        <span class="glyphicon glyphicon-search"></span> Search
-    </button>
+        <button type="button"  onclick="myCall(document.getElementsByName('search_name')[0].value, 1)" class="btn btn-default" value="Search" />
+            <span class="glyphicon glyphicon-search"></span> Search
+        </button>
 
 
     <br><br>
+    </div>
+
 </div>
+<div id="SearchByNameDiv2"class="col-lg-4">
+
+    
+    <div class="listing1"> 
+    </div>
+
+    <!-- <div id="mybox">
+    </div> -->
+
+</div>
+
+
+
+<div id="SearchByNameForDirDiv1"class="form-group">
+    <div class="col-lg-4">
+        <!-- <input type="text" class="form-control" placeholder=".col-lg-2"> -->
+        <br>
+        <label for="inputdefault">Search For SRC By Name:</label>
+
+        <input type="text" name="search_name_src" class="form-control" value="">
+        <button type="button"  onclick="myCall(document.getElementsByName('search_name_src')[0].value, 2)" class="btn btn-default" value="Search" />
+            <span class="glyphicon glyphicon-search"></span> Search
+        </button>
+
+        <br><br>
+
+        <label for="inputdefault">Search For DST By Name:</label>
+
+        <input type="text" name="search_name_dst" class="form-control" value="">
+        <button type="button"  onclick="myCall(document.getElementsByName('search_name_dst')[0].value, 2)" class="btn btn-default" value="Search" />
+            <span class="glyphicon glyphicon-search"></span> Search
+        </button>
+
+        <br><br>
+        
+        <button id="Directions" type="button" class="btn btn-default btn-sm" >
+        <span class="glyphicon glyphicon-road"></span> Get-Directions
+        </button>
+       
+
+        <!-- <button type="button"  onclick="myCall(document.getElementsByName('search_name')[0].value)" class="btn btn-default" value="Search" />
+            <span class="glyphicon glyphicon-search"></span> Search
+        </button> -->
+
+
+    <br><br>
+    </div>
+
+</div>
+<div id="SearchByNameForDirDiv2"class="col-lg-4">
+
+    
+    <div class="listing2"  > 
+    </div>
+
+    <!-- <div id="mybox">
+    </div> -->
 
 </div>
 
     <!-- <img src="{% static "img/marker.png" %}" alt="My image"/>
 -->
-
-
+                <!-- <img src="{% static "img/src.png" %}" alt="My image"/>
+                
+                <img src="{% static "img/dst.png" %}" alt="My image"/> -->
 
 {% endblock %}
