@@ -2,20 +2,6 @@
 {% block script %} 
 
 <script>
-    //////////////////////////
-    
-    $(document).ready(function () {
-        $("#MarkingRadio").hide();
-        $("#NameSearchRadio").hide();
-        
-        $("#SearchByNameDiv1").hide();
-        $("#SearchByNameDiv2").hide();
-
-        $("#SearchByNameForDirDiv1").hide();
-        $("#SearchByNameForDirDiv2").hide();
-
-        NameSearchRadioCheck=0
-
         var colorWay=['#e74c3c','#f1c40f', '#1abc9c', '#3498db' , '#9b59b6', '#e74c3c' , '#ff0000'];
         var colorCountForWay=0;
         var scale = 1;
@@ -38,7 +24,82 @@
 
         var minLat = 28.18301010131836,
         minLong = 76.69200134277344;
+        var NameSearchRadioCheck=0;
 
+
+    //////////////////////////
+    // astar by point pick  type 1 
+        function astarAjax( Lon1,Lat1, Lon2, Lat2){
+
+            console.log("here");
+            var request = $.ajax({
+                url: "/app1/astar",
+                type: "POST",
+                data: { type:1, Lat1: Lat1, Lon1:Lon1, Lat2:Lat2, Lon2:Lon2} ,            
+                dataType: "html"
+            });
+
+            request.done(function(msg) {
+                obj = JSON.parse(msg);
+                var list= obj.list;
+                displayAstar(list)
+                
+
+               
+                
+            });
+
+            request.fail(function(jqXHR, textStatus) {
+                alert( "Request failed: " + textStatus );
+            });
+        }
+        function displayAstar(list){
+            var c = document.getElementById("myCanvas");
+            var width = c.width;
+            var height = c.height;
+            var ctx = c.getContext("2d");
+
+             console.log("list=",list);
+            //clear();
+            for (var i=0; i < list.length-2; i+=2) {
+                    var lat1 = list[i+1];
+                    var lon1= list[i];
+                    var lat2 = list[i+3];
+                    var lon2= list[i+2];
+                    //console.log("here",lon1, lat1, lon2, lat2 );
+                    
+                    
+
+                    var locX1 = ((lon1 - minLong) * (width) / (maxLong - minLong));
+                    var locY1 = ((maxLat - (lat1)) * (height) / (maxLat - minLat));
+                    var locX2 = ((lon2 - minLong) * (width) / (maxLong - minLong));
+                    var locY2 = ((maxLat - (lat2)) * (height) / (maxLat - minLat));
+                    //console.log("here",locX1, locY1, locX2, locY2 );
+
+                    ctx.strokeStyle = "RED";
+                    ctx.beginPath();
+                    ctx.moveTo(locX1,locY1);
+                    ctx.lineTo(locX2,locY2);
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+            }
+            
+        }
+
+
+    $(document).ready(function () {
+        $("#MarkingRadio").hide();
+        $("#NameSearchRadio").hide();
+        
+        $("#SearchByNameDiv1").hide();
+        $("#SearchByNameDiv2").hide();
+
+        $("#SearchByNameForDirDiv1").hide();
+        $("#SearchByNameForDirDiv2").hide();
+
+        
+
+        
         var c = document.getElementById("myCanvas");
         var width = c.width;
         var height = c.height;
@@ -152,8 +213,8 @@
                     var dd=8980;
                     if(d>dd){
                         //vi_adjgraphids[count]
-                        //console.log("locs=", lon2, lat2,  locX2,locY2, vi_adjids[count], vi_adjgraphids[count][count1])
-                        continue;
+                        console.log("long dist, locs=", lon2, lat2,  locX2,locY2, vi_adjids[count], vi_adjgraphids[count][count1])
+                        //continue;
                     }
 
                     // if(locX2<=0.0 || locY2<=0.0 || locX2>=1000.0 || locY2>=500.0)
@@ -398,66 +459,14 @@
             }
         });
 
-        function displayAstar(list){
-             console.log("list=",list);
-            //clear();
-            for (var i=0; i < list.length-2; i+=2) {
-                    var lat1 = list[i+1];
-                    var lon1= list[i];
-                    var lat2 = list[i+3];
-                    var lon2= list[i+2];
-                    //console.log("here",lon1, lat1, lon2, lat2 );
-                    
-                    
-
-                    var locX1 = ((lon1 - minLong) * (width) / (maxLong - minLong));
-                    var locY1 = ((maxLat - (lat1)) * (height) / (maxLat - minLat));
-                    var locX2 = ((lon2 - minLong) * (width) / (maxLong - minLong));
-                    var locY2 = ((maxLat - (lat2)) * (height) / (maxLat - minLat));
-                    //console.log("here",locX1, locY1, locX2, locY2 );
-
-                    ctx.strokeStyle = "RED";
-                    ctx.beginPath();
-                    ctx.moveTo(locX1,locY1);
-                    ctx.lineTo(locX2,locY2);
-                    ctx.lineWidth = 1;
-                    ctx.stroke();
-            }
-           
-            
-            
-        }
+        
 
         //////////////////////////////////////////////////////////////////
-        displayAstar
+        
         ///////////////// Marker on Map ////////////////////////////////
         var PointChooseFlag=0;
 
-        // astar by point pick  type 1 
-        function astarAjax( Lon1,Lat1, Lon2, Lat2){
-
-            console.log("here");
-            var request = $.ajax({
-                url: "/app1/astar",
-                type: "POST",
-                data: { type:1, Lat1: Lat1,Lon1:Lon1,Lat2:Lat2,Lon2:Lon2} ,            
-                dataType: "html"
-            });
-
-            request.done(function(msg) {
-                obj = JSON.parse(msg);
-                var list= obj.list;
-                displayAstar(list)
-                
-
-               
-                
-            });
-
-            request.fail(function(jqXHR, textStatus) {
-                alert( "Request failed: " + textStatus );
-            });
-        }
+        
 
         function mark(img, event, height, width){
             //console.log("here1,PointChooseFlag", PointChooseFlag);
@@ -632,7 +641,7 @@
         ///////////////////////////////////////////////////////////////
 
         function displayNodes(data, img1){
-            clear();
+            //clear();
             
             //console.log("nodes inside inside, data=", data);
             
@@ -726,18 +735,30 @@
             console.log("list node/way id=", id);
 
             //console.log('id of clicked item= ', this.id, "name of selected item=", parent.attr("id"));
-            if(type=="nodes" || type=="ways"){
+            //if(type=="nodes" || type=="ways"){
                 
                 document.getElementsByName('search_name')[0].value=name;
                 var img1 = new Image();
                 img1.src ='{% static "img/pin.png" %}';
+                var request;
+                if(type=="ways"){
+                    request = $.ajax({
+                        url: "/app1/data",
+                        type: "POST",
+                        data: { name: name, type:type } ,            
+                        dataType: "html"
+                    });
+                }
+                else{
+                    request = $.ajax({
+                        url: "/app1/data",
+                        type: "POST",
+                        data: { name: name, type:"nodes" } ,            
+                        dataType: "html"
+                    });
 
-                var request = $.ajax({
-                    url: "/app1/data",
-                    type: "POST",
-                    data: { name: name, type:type } ,            
-                    dataType: "html"
-                });
+                }
+               
 
                 request.done(function(msg) {
                     obj = JSON.parse(msg);
@@ -750,13 +771,30 @@
                     
                     //list= [28.492847442626953, 77.00435638427734, 28.434986114501953, 77.05077362060547, 28.619922637939453, 77.07022094726562, 28.503517150878906, 77.20549774169922, 28.758880615234375, 77.1546401977539, 28.47164535522461, 77.49659729003906, 28.49455451965332, 77.28811645507812, 28.67414093017578, 77.44739532470703, 28.60383415222168, 77.24569702148438, 28.431650161743164, 77.00296783447266, 28.322860717773438, 77.32283782958984];
 
-                    if(type=="nodes"){
-                        console.log("nodes inside");
-                       displayNodes(node_list, img1); 
-                    }
-                    else if(type=="ways"){
+                    
+                    if(type=="ways"){
                         console.log("ways inside");
                         displayWays(way_list, dlist);    
+                    }
+                    else{ //nodes, 2, 3
+                        console.log("nodes inside");
+                        
+                       
+                       if(type=="2"){
+                            document.getElementsByName('search_name_src')[0].value=name;
+                            document.getElementsByName('search_name_src_id')[0].value=id;
+                            document.getElementsByName('search_name_src_lon')[0].value=node_list[1];
+                            document.getElementsByName('search_name_src_lat')[0].value=node_list[0];
+
+                        }
+                        else if(type=="3"){
+                            document.getElementsByName('search_name_dst')[0].value=name;
+                            document.getElementsByName('search_name_dst_id')[0].value=id;
+                            document.getElementsByName('search_name_dst_lon')[0].value=node_list[1];
+                            document.getElementsByName('search_name_dst_lat')[0].value=node_list[0];
+                        }
+                        displayNodes(node_list, img1);
+
                     }
                     
                 });
@@ -765,16 +803,16 @@
                     alert( "Request failed: " + textStatus );
                 });
 
-            }
-            else if(type=="2"){
-                document.getElementsByName('search_name_src')[0].value=name;
-                document.getElementsByName('search_name_src_id')[0].value=id;
+            //}
+            // else if(type=="2"){
+            //     document.getElementsByName('search_name_src')[0].value=name;
+            //     document.getElementsByName('search_name_src_id')[0].value=id;
 
-            }
-            else if(type=="3"){
-                document.getElementsByName('search_name_dst')[0].value=name;
-                document.getElementsByName('search_name_dst_id')[0].value=id;
-            }
+            // }
+            // else if(type=="3"){
+            //     document.getElementsByName('search_name_dst')[0].value=name;
+            //     document.getElementsByName('search_name_dst_id')[0].value=id;
+            // }
             
         });
 
@@ -889,29 +927,29 @@
     }
     
     // astar by name search  type 2 
-    function getDirections(srcId, dstId) {
-        console.log('GetDirections, ids=', srcId, dstId);
-        var request = $.ajax({
-            url: "/app1/astar",
-            type: "POST",
-            data: { type:2, srcId:srcId,  dstId:dstId } ,            
-            dataType: "html"
-        });
+    // function getDirections(srcId, dstId) {
+    //     console.log('GetDirections, ids=', srcId, dstId);
+    //     var request = $.ajax({
+    //         url: "/app1/astar",
+    //         type: "POST",
+    //         data: { type:2, srcId:srcId,  dstId:dstId } ,            
+    //         dataType: "html"
+    //     });
 
-        request.done(function(msg) {
-            obj = JSON.parse(msg);
-            var list= obj.list;
-            displayAstar(list)
-            //console.log("from astar type 2:", obj)
-            displayAstar(list)
+    //     request.done(function(msg) {
+    //         obj = JSON.parse(msg);
+    //         var list= obj.list;
+    //         displayAstar(list)
+    //         //console.log("from astar type 2:", obj)
+    //         displayAstar(list)
 
             
-        });
+    //     });
 
-        request.fail(function(jqXHR, textStatus) {
-            alert( "Request failed: " + textStatus );
-        });
-    }
+    //     request.fail(function(jqXHR, textStatus) {
+    //         alert( "Request failed: " + textStatus );
+    //     });
+    // }
 
 
 
@@ -1029,6 +1067,8 @@
 
         <input type="text" name="search_name_src" class="form-control" value="">
         <input type="hidden" name="search_name_src_id" value="">
+        <input type="hidden" name="search_name_src_lon" value="">
+        <input type="hidden" name="search_name_src_lat" value="">
         
         <button type="button"  onclick="myCall(document.getElementsByName('search_name_src')[0].value, 2)" class="btn btn-default" value="Search" />
             <span class="glyphicon glyphicon-search"></span> Search
@@ -1040,13 +1080,22 @@
 
         <input type="text" name="search_name_dst" class="form-control" value="">
         <input type="hidden" name="search_name_dst_id" value="">
+        <input type="hidden" name="search_name_dst_lon" value="">
+        <input type="hidden" name="search_name_dst_lat" value="">
+
         <button type="button"  onclick="myCall(document.getElementsByName('search_name_dst')[0].value, 3)" class="btn btn-default" value="Search" />
             <span class="glyphicon glyphicon-search"></span> Search
         </button>
 
         <br><br>
+         
         
-        <button id="Directions" type="button"  onclick="getDirections(document.getElementsByName('search_name_src_id')[0].value, document.getElementsByName('search_name_dst_id')[0].value)" class="btn btn-default btn-sm" >
+        <!-- <button id="Directions" type="button"  onclick="getDirections(document.getElementsByName('search_name_src_id')[0].value, document.getElementsByName('search_name_dst_id')[0].value)" class="btn btn-default btn-sm" >
+            <span class="glyphicon glyphicon-road"></span> Get-Directions
+        </button> -->
+        
+        
+        <button id="Directions" type="button"  onclick="astarAjax(document.getElementsByName('search_name_src_lon')[0].value,document.getElementsByName('search_name_src_lat')[0].value , document.getElementsByName('search_name_dst_lon')[0].value, document.getElementsByName('search_name_dst_lat')[0].value )"  class="btn btn-default btn-sm" >
             <span class="glyphicon glyphicon-road"></span> Get-Directions
         </button>
        

@@ -48,7 +48,7 @@ def AStar_tocord(r):
         vi_cord_list.append(nd.lat)        
 
 
-# r=e.rtree(490811040)
+# r=e.rtree(422399792)
 # print(r.root)
 # r.boundingBox(77.1780,77.2652,28.5985,28.6424,4)
 # print(r.nodes_in_box )
@@ -60,7 +60,7 @@ def AStar_tocord(r):
 def req(request):
 
     response = {'list': [], 'adjlist': [] }
-    r=e.rtree(490811040)
+    r=e.rtree(422399792)
     
     maxLat = 28.9689998626709
     maxLong = 77.73299407958984
@@ -241,7 +241,7 @@ def rtree(request):
     print("rtree",admin_level, minLat, minLong,maxLat, maxLong)
     
     response = {'list': [], 'adjlist': [] }
-    r=e.rtree(490811040)
+    r=e.rtree(422399792)
     r.boundingBox(minLong,maxLong,minLat,maxLat,admin_level)
     adjlist_generate(r)
 
@@ -280,7 +280,7 @@ def rtree(request):
 #for returning shortest path. 
 @csrf_exempt
 def astar(request):
-    r=e.rtree(490811040)
+    r=e.rtree(422399792)
     response = {'list':[]}
 
 
