@@ -9,35 +9,102 @@ from models import Users
 import json
 import os
 import example as e
+################################################################
+vi_adjids=[]
+vi_adjgraphids=[]
+vi_graph=[]
+vi_cord_list=[]
+
+def adjlist_generate(r):
+    del vi_graph[:]
+    del vi_cord_list[:]
+    del vi_adjids[:]
+    del vi_adjgraphids[:]
+    
+
+    for i in range(len(r.nodes_in_box)):
+        nd=r.queryNode(r.nodes_in_box[i])
+        vi_cord_list.append(nd.lon)
+        vi_cord_list.append(nd.lat)
+        vi_adjids.append(int(nd.id))
+
+        mi=[]
+        temp=[]
+        for j in range(len(nd.adjPtr)):
+            md=r.queryNode2(nd.adj[j],nd.adjPtr[j])
+            mi.append(md.lon)
+            mi.append(md.lat)
+            temp.append(int(md.id))
+
+
+        vi_graph.append(mi)
+        vi_adjgraphids.append(temp)
+
+
+# r=e.rtree(490811040)
+# print(r.root)
+# r.boundingBox(77.1780,77.2652,28.5985,28.6424,4)
+# print(r.nodes_in_box )
 
 ################################################################
 
 #for page initial loading 
 @csrf_exempt
 def req(request):
-    i=0;
-    module_dir = os.path.dirname(__file__)  # get current directory
-    file_path = os.path.join(module_dir, 'data.txt')
-    list1=[]
-    with open(file_path) as fp:
-        for line in fp:
-            i+=1
-            # if(i%300000!=0):#change here for no. of nodes.
-            #     continue;
 
-            words = line.split(" ") 
-            #loc = {'lat':float(words[0]),  'lon': float(words[1]) }
-            list1.append(float(words[0]))
-            list1.append(float(words[1]))
+    response = {'list': [], 'adjlist': [] }
+    r=e.rtree(490811040)
+    
+    maxLat = 28.9689998626709
+    maxLong = 77.73299407958984
+    minLat = 28.18301010131836
+    minLong = 76.69200134277344
+
+    r.boundingBox(minLong,maxLong,minLat,maxLat,1)
+    adjlist_generate(r)
+
+
+    i=0;
+    # module_dir = os.path.dirname(__file__)  # get current directory
+    # file_path = os.path.join(module_dir, 'data.txt')
+    list1=[]
+    # with open(file_path) as fp:
+    #     for line in fp:
+    #         i+=1
+    #         # if(i%300000!=0):#change here for no. of nodes.
+    #         #     continue;
+
+    #         words = line.split(" ") 
+    #         #loc = {'lat':float(words[0]),  'lon': float(words[1]) }
+    #         list1.append(float(words[0]))
+    #         list1.append(float(words[1]))
 
             
-            if(i==100):#change here for no. of nodes.
-                break;
+    #         if(i==100):#change here for no. of nodes.
+    #             break;
     
     #print list1            
     #print(request.POST.get('search_name'))
     #list1 = ['physics', 'chemistry', 1997, 2000];
-    context = {'list': list1}
+    print(len(vi_cord_list))
+    print(len(vi_graph))
+    # print(vi_adjids)
+    # print(vi_adjgraphids)
+    # count=0
+    # for i in xrange(0, len(vi_adjids)-1):
+    #     print(vi_adjids[i], vi_adjids[i+1])
+    #     i+=1
+    #     count=0
+    #     for i in xrange(0, len(vi_adjgraphids)-1):
+
+    
+    #response['list']=vi_cord_list
+    #response['adjlist']=vi_graph
+
+    #JsonResponse(response)
+    
+    context = {'list': vi_cord_list, 'adjlist': vi_graph, 'vi_adjids':vi_adjids, 'vi_adjgraphids':vi_adjgraphids }
+    #context = {'list': vi_cord_list}
 
     return render(request, 'view1.html', context)
 
@@ -156,13 +223,35 @@ def data(request):
 @csrf_exempt
 def rtree(request):
     
-    admin_level=request.POST.get("admin_level")
-    minLat=request.POST.get("minLat")
-    minLon=request.POST.get("minLon")
-    maxLat=request.POST.get("maxLat")
-    maxLon=request.POST.get("maxLon")
-    print("rtree",admin_level, minLat, minLon,maxLat, maxLon)
-    return JsonResponse({'foo':'bar'})
+    admin_level=int(request.POST.get("admin_level"))
+    minLat=float(request.POST.get("minLat"))
+    minLong=float(request.POST.get("minLon"))
+    maxLat=float(request.POST.get("maxLat"))
+    maxLong=float(request.POST.get("maxLon"))
+    
+    
+
+    print("rtree",admin_level, minLat, minLong,maxLat, maxLong)
+    
+    response = {'list': [], 'adjlist': [] }
+    r=e.rtree(490811040)
+    r.boundingBox(minLong,maxLong,minLat,maxLat,admin_level)
+    adjlist_generate(r)
+
+
+    # print(len(vi_cord_list))
+    # print(len(vi_graph))
+    response['list']=vi_cord_list
+    response['adjlist']=vi_graph
+
+
+    #JsonResponse(response)
+    #context = {'list': vi_cord_list, 'adjlist': vi_graph}
+    #context = {'list': vi_cord_list}
+
+    #return render(request, 'view1.html', context)
+    return JsonResponse(response)
+
 
 ################################################################
 

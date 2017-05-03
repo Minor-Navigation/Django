@@ -27,8 +27,15 @@
         var admin_level=1;
         var maxLat = 28.9689998626709,
         maxLong = 77.73299407958984;
+
+        // var maxLat = 28.2689998626709,
+        // maxLong = 77.313299407958984;
+
         var minLat = 28.18301010131836,
         minLong = 76.69200134277344;
+
+        // var minLat = 28.18301010131836,
+        // minLong = 76.99200134277344;
 
         var c = document.getElementById("myCanvas");
         var width = c.width;
@@ -53,43 +60,126 @@
             c = document.getElementById("myCanvas");
             ctx = c.getContext("2d");
             
-            var data = [];
-            //console.log("list=", '{{list}}');
+            //var data = [];
+            //var adjacency_list=[];
+            var data = JSON.parse('{{list}}');
+            var adjlist = JSON.parse('{{adjlist}}');
+            var vi_adjids= JSON.parse('{{vi_adjids}}');
+            var vi_adjgraphids= JSON.parse('{{vi_adjgraphids}}');
+
+            console.log("obj=",  data[0], data[1]);
+            console.log("obj=",  adjlist[0]);
             
-            // this is is from django
-            {% for i in list %}
-            var temp = '{{ i }}';
-            //console.log(temp); 
+            console.log("obj=",  data[2], data[3]);
+            console.log("obj=",  adjlist[1]);
             
-            data.push( parseFloat(temp));
-            {% endfor %}
+            console.log("obj=",  data[4], data[5]);
+            console.log("obj=",  adjlist[2]);
+
+            console.log("obj=",  data[6], data[7]);
+            console.log("adj=",  adjlist);
+            //console.log("vi_adjids=",  vi_adjids);
+            // console.log("vi_adjgraphids=",  vi_adjgraphids);
+
 
             
-            for (var i = 0; i < data.length; i++) {
-                var lon = data[i+1];
-                var lat = data[i];
-                i++;
+            // // this is is from django
+            // {% for i in list %}
+            // var temp = '{{ i }}';
+            // //console.log(temp); 
+            
+            // data.push( parseFloat(temp));
+            // {% endfor %}
+
+            // {% for i in adjlist %}
+            // var temp = '{{ i }}';
+            //     //console.log("adjacency_list",temp);
+            //     adjacency_list.push( temp);
 
 
-                var locX1 = ((lon - minLong) * (width) / (maxLong - minLong));
-                var locY1 = ((maxLat - (lat)) * (height) / (maxLat - minLat));
+            //     // {% for j in temp %}
+            //     //     var temp2 = '{{ j }}';
+            //     //     console.log("adjacency_list",temp2);
+                
+            //     // {% endfor %}
 
-                //console.log(lat, lon, locX1, locY1);
 
-                ctx.fillRect(locX1, locY1, 1, 1);
+            //     //adjacency_list.push( parseFloat(temp));
+            // {% endfor %}
 
-                ctx.stroke();
+            // console.log("adjacency_list",adjacency_list);
+
+            var count=-1;
+            for (var i = 0; i < data.length-1; i+=2) {
+            //for (var i = 0; i < 4;i+=2) {
+                var lon1 = data[i];
+                var lat1 = data[i+1];
+                //console.log("node=", lon1, lat1);    
+                
+
+
+                var locX1 = ((lon1 - minLong) * (width) / (maxLong - minLong));
+                var locY1 = ((maxLat - (lat1)) * (height) / (maxLat - minLat));
+
+                // ctx.strokeStyle = "BLUE";
+                // //console.log(lat, lon, locX1, locY1);
+                
+                // ctx.fillRect(locX1, locY1, 1, 1);
+                // ctx.stroke();
+
+                count++;
+                //console.log("here");
+                // for(var j=0; j<adjlist[count].length; j+=2){
+
+                // }                   
+                var count1=-1;    
+                for (var j = 0; j<adjlist[count].length-1 ; j+=2) {
+                //for (var j = 0; j < 1; j++) {
+                    
+                    count1++;
+                    var lon2 = adjlist[count][j];
+                    var lat2 = adjlist[count][j+1];
+                    
+                    //if(count==0 || count==1) 
+                    //console.log("ad=", lon2, lat2);                   
+                    
+                    var locX2 = ((lon2 - minLong) * (width) / (maxLong - minLong));
+                    var locY2 = ((maxLat - (lat2)) * (height) / (maxLat - minLat));
+                    
+                    var d=((locX2-locX1)*(locX2-locX1))+ ((locY2-locY1)*(locY2-locY1));
+                    var dd=8980;
+                    if(d>dd){
+                        //vi_adjgraphids[count]
+                        //console.log("locs=", lon2, lat2,  locX2,locY2, vi_adjids[count], vi_adjgraphids[count][count1])
+                        continue;
+                    }
+
+                    // if(locX2<=0.0 || locY2<=0.0 || locX2>=1000.0 || locY2>=500.0)
+                    //console.log("locs=", locX2,locY2)
+                    ctx.strokeStyle = "RED";
+                    ctx.beginPath();
+                    ctx.moveTo(locX1,locY1);
+                    ctx.lineTo(locX2,locY2);
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                    
+                    
+                    ctx.strokeStyle = "RED";
+                    ctx.fillRect(locX2, locY2, 2, 2);
+                    ctx.stroke();
+                    
+                }
             }
             ///////////////////////////////////////////////////////////
             
-            ctx.font = "30px Verdana";
-            var gradient = ctx.createLinearGradient(0, 0, c.width, 0);
-            gradient.addColorStop("0", "magenta");
-            gradient.addColorStop("0.5", "blue");
-            gradient.addColorStop("1.0", "red");
+            // ctx.font = "30px Verdana";
+            // var gradient = ctx.createLinearGradient(0, 0, c.width, 0);
+            // gradient.addColorStop("0", "magenta");
+            // gradient.addColorStop("0.5", "blue");
+            // gradient.addColorStop("1.0", "red");
 
-            ctx.strokeStyle = gradient;
-            ctx.strokeText("Navigation On Delhi Map :)", 10, 50);
+            // ctx.strokeStyle = gradient;
+            // ctx.strokeText("Navigation On Delhi Map :)", 10, 50);
             
         }
         draw();
@@ -97,107 +187,65 @@
 
 
         ///////////////////////////////////////////////////
-        // c.onmousewheel = function (event){
-        // //function factoring(){
-        //     var mousex = event.clientX - c.offsetLeft;
-        //     var mousey = event.clientY - c.offsetTop;
-        //     var wheel = event.wheelDelta/120;//n or -n
+        
+        ////////////////////////////////////////////////////////////////
+        /////////////////Drag Drop./////////////////////////////
+        
 
-        //     var zoom = 1 + wheel/2;
+            var img = new Image();
+            img.onload = function(){
+                ctx.drawImage(img, 0,0);
+            };
+            img.src = "http://images.christmastimeclipart.com/images/2/1271716593176_1788/img_1271716593176_17881.jpg";
 
-        //     ctx.translate(
-        //         originx,
-        //         originy
-        //     );
-        //     ctx.scale(zoom,zoom);
-        //     ctx.translate(
-        //         -( mousex / scale + originx - mousex / ( scale * zoom ) ),
-        //         -( mousey / scale + originy - mousey / ( scale * zoom ) )
-        //     );
+            var canvas=document.getElementById("myCanvas");
+            var ctx=canvas.getContext("2d");
+            var canvasOffset=$("#myCanvas").offset();
+            var offsetX=canvasOffset.left;
+            var offsetY=canvasOffset.top;
+            var canvasWidth=canvas.width;
+            var canvasHeight=canvas.height;
+            var isDragging=false;
 
-        //     originx = ( mousex / scale + originx - mousex / ( scale * zoom ) );
-        //     originy = ( mousey / scale + originy - mousey / ( scale * zoom ) );
-        //     scale *= zoom;
-        // } 
-
-        c.onmousewheel = function (event){
-            draw();
-            event.preventDefault();
-            // Get mouse offset.
-            var mousex = event.clientX - c.offsetLeft;
-            var mousey = event.clientY - c.offsetTop;
-            // Normalize wheel to +1 or -1.
-            var wheel = event.wheelDelta/120;
-            //console.log("wheel=",wheel );
-            //var wheel = 0.2;
-            // Compute zoom factor.
-            var zoom = Math.exp(wheel*zoomIntensity);
-            
-            if(wheel<0){
-                zoom = 0.5
-                maxLat=maxLat*(5.0/4.0);
-                minLat=minLat*(3.0/4.0);
-
-                maxLong=maxLat*(5.0/4.0);
-                minLong=minLat*(3.0/4.0);
+            function handleMouseDown(e){
+              canMouseX=parseInt(e.clientX-offsetX);
+              canMouseY=parseInt(e.clientY-offsetY);
+              // set the drag flag
+              isDragging=true;
             }
-            if(wheel>0){
-                zoom = 1.5
 
-                maxLat=maxLat*(3.0/4.0);
-                minLat=minLat*(5.0/4.0);
-
-                maxLong=maxLat*(3.0/4.0);
-                minLong=minLat*(5.0/4.0);    
+            function handleMouseUp(e){
+              canMouseX=parseInt(e.clientX-offsetX);
+              canMouseY=parseInt(e.clientY-offsetY);
+              // clear the drag flag
+              isDragging=false;
             }
-            var zoom = Math.exp(wheel*zoomIntensity);
-            //console.log("zoom=",zoom );
-            
-            // Translate so the visible origin is at the ctx's origin.
-            ctx.translate(originx, originy);
 
-            // Compute the new visible origin. Originally the mouse is at a
-            // distance mouse/scale from the corner, we want the point under
-            // the mouse to remain in the same place after the zoom, but this
-            // is at mouse/new_scale away from the corner. Therefore we need to
-            // shift the origin (coordinates of the corner) to account for this.
-            originx -= mousex/(scale*zoom) - mousex/scale;
-            originy -= mousey/(scale*zoom) - mousey/scale;
-            
-            // Scale it (centered around the origin due to the trasnslate above).
-            ctx.scale(zoom, zoom);
-            // Offset the visible origin to it's proper position.
-            ctx.translate(-originx, -originy);
+            function handleMouseOut(e){
+              canMouseX=parseInt(e.clientX-offsetX);
+              canMouseY=parseInt(e.clientY-offsetY);
+              // user has left the canvas, so clear the drag flag
+              //isDragging=false;
+            }
 
-            // Update scale and others.
-            scale *= zoom;
-            visibleWidth = width / scale;
-            visibleHeight = height / scale;
-        }
+            function handleMouseMove(e){
+              canMouseX=parseInt(e.clientX-offsetX);
+              canMouseY=parseInt(e.clientY-offsetY);
+              // if the drag flag is set, clear the canvas and draw the image
+              if(isDragging){
+                  ctx.clearRect(0,0,canvasWidth,canvasHeight);
+                  
+                  rtreeAjax(admin_level, minLat, minLon, maxLat, maxLon);
+                  //ctx.drawImage(img,canMouseX-128/2,canMouseY-120/2,128,120);
+              }
+            }
 
-        // canvas.addEventListener('click', function() { }, false);
-        // function getMousePos(canvas, evt) {
-        //     var rect = canvas.getBoundingClientRect();
-        //     return {
-        //       x: evt.clientX - rect.left,
-        //       y: evt.clientY - rect.top
-        //     };
-        // }
+            $("#myCanvas").mousedown(function(e){handleMouseDown(e);});
+            $("#myCanvas").mouseup(function(e){handleMouseUp(e);});
+            $("#myCanvas").mousemove(function(e){handleMouseMove(e);});
+            $("#myCanvas").mouseout(function(e){handleMouseOut(e);});
 
-        // c.addEventListener('click', function() { 
-        //     var elem = document.getElementById('myCanvas'),
-        //         elemLeft = elem.offsetLeft,
-        //         elemTop = elem.offsetTop;
-        //     // console.log("elemLeft=", elemLeft, "elemTop=", elemTop);
-
-        //     var rect = c.getBoundingClientRect();
-        //     var x =event.clientX - rect.left;
-        //     var y = event.clientY - rect.top;
-        //     // console.log("x=", x, "y=", y);
-        //     // console.log("rect.left=", rect.left, "rect.top=", rect.top);
-
-        // }, false);
-
+        
 
         ////////////////////////////////////////////////////////////////
         /////////////////Zoom in Zoom Out./////////////////////////////
@@ -212,8 +260,39 @@
             });
 
             request.done(function(msg) {
+                clear();
+                
                 obj = JSON.parse(msg);
-                console.log(obj);
+                //console.log(obj);
+                var data= obj.list;
+                var adjlist = obj.adjlist;
+                console.log("data= ",data,  "len=", data.length);
+                console.log("adjlist= ",adjlist);
+
+                var count=-1;
+                for (var i = 0; i < data.length-1; i+=2) {
+                    count++;
+
+
+                    //for (var i = 0; i < 4;i+=2) {
+                    var lon1 = data[i];
+                    var lat1 = data[i+1];
+                    //console.log("node=", lon1, lat1);    
+                    
+
+
+                    var locX1 = ((lon1 - minLong) * (width) / (maxLong - minLong));
+                    var locY1 = ((maxLat - (lat1)) * (height) / (maxLat - minLat));
+
+                    ctx.strokeStyle = "BLUE";
+                    //console.log(lat, lon, locX1, locY1);
+                    
+                    ctx.fillRect(locX1, locY1, 2, 2);
+                    ctx.stroke();
+                }
+
+                // var data = JSON.parse('{{list}}');
+                // var adjlist = JSON.parse('{{adjlist}}');
 
                 // ids=obj.id;//array
                 // names=obj.name;//array
@@ -233,8 +312,17 @@
                 alert("Cant be further Zoomed Out");
             }
             else{
+                console.log("loccss:= ", minLat, minLong,maxLat,maxLong );
+                minLat=minLat-(maxLat-minLat)*(0.3000000000000000);
+                minLong=minLong-(maxLong-minLong)*(0.3000000000000000);
+                
+                maxLat=maxLat+(maxLat-minLat)*(0.3000000000000000);
+                maxLong=maxLong+(maxLong-minLong)*(0.3000000000000000);
+
                 admin_level-=1;
-                rtreeAjax(admin_level, minLat, minLong, maxLat, maxLong)
+                //admin_level=1;
+                console.log("loccss:= ", minLat, minLong,maxLat,maxLong );
+                rtreeAjax(admin_level, minLat, minLong, maxLat, maxLong);
 
 
             }
@@ -247,9 +335,18 @@
                 alert("Cant be further Zoomed In");
             }
             else{
+                console.log("loccss:= ", minLat, minLong,maxLat,maxLong );
+                minLat=minLat+(maxLat-minLat)*(0.3000000000000000);
+                minLong=minLong+(maxLong-minLong)*(0.3000000000000000);
+                
+                maxLat=maxLat-(maxLat-minLat)*(0.3000000000000000);
+                maxLong=maxLong-(maxLong-minLong)*(0.3000000000000000);
+
                 admin_level+=1;
-                console.log("loccss:= ", minLat, minLong);
-                rtreeAjax(admin_level, minLat, minLong, maxLat, maxLong)
+                //admin_level=1;
+                console.log("loccss:= ", minLat, minLong,maxLat,maxLong );
+                rtreeAjax(admin_level, minLat, minLong, maxLat, maxLong);
+
 
             }
         });
@@ -372,6 +469,8 @@
                     //y2 = ((maxLat - (lat2)) * (height) / (maxLat - minLat));
                     y2 = (((y2*(maxLat - minLat))/(height)) -  maxLat) * (-1);
 
+                    console.log("clicked long lats=", x1,y1,x2, y2);
+
                     astarAjax(x1, y1, x2, y2);
 
                 }
@@ -417,7 +516,6 @@
         
         //////////////////////////////////////////////////////////////
 
-        <!-- For getting top and left of canvas -->
 
 
         var rect = c.getBoundingClientRect();

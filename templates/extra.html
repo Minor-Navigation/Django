@@ -1,49 +1,908 @@
-<!doctype html>
-<html>
-<head>
-    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
-    <script>
+{% extends "base.html" %}
+{% block script %} 
 
-        function myCall(name) {
+<script>
+    //////////////////////////
+    
+    $(document).ready(function () {
+        $("#MarkingRadio").hide();
+        $("#NameSearchRadio").hide();
+        
+        $("#SearchByNameDiv1").hide();
+        $("#SearchByNameDiv2").hide();
+
+        $("#SearchByNameForDirDiv1").hide();
+        $("#SearchByNameForDirDiv2").hide();
+
+        NameSearchRadioCheck=0
+
+        var colorWay=['#e74c3c','#f1c40f', '#1abc9c', '#3498db' , '#9b59b6', '#e74c3c' , '#ff0000'];
+        var colorCountForWay=0;
+        var scale = 1;
+        var originx = 0;
+        var originy = 0;
+
+        var zoomIntensity = 1.5;
+
+        var admin_level=1;
+        var maxLat = 28.9689998626709,
+        maxLong = 77.73299407958984;
+        var minLat = 28.18301010131836,
+        minLong = 76.69200134277344;
+
+        var c = document.getElementById("myCanvas");
+        var width = c.width;
+        var height = c.height;
+        var ctx = c.getContext("2d");
+
+
+        var visibleWidth = width;
+        var visibleHeight = height;
+        ////////////////////////////////////////////////////////////////
+        function clear() {
+            c = document.getElementById("myCanvas");
+            ctx = c.getContext("2d");
+            ctx.clearRect(0-100, 0-100, width+100, height+100);
+        }
+
+        ////////////////////////////////////////////////////////////////
+        //<!-- This script is for mapping nodes on map(canvas) -->
+        function draw(){
+            clear();
+
+            c = document.getElementById("myCanvas");
+            ctx = c.getContext("2d");
+            
+            var data = [];
+            var adjacency_list=[];
+
+            //console.log("list=", '{{list}}');
+            
+            // this is is from django
+            {% for i in list %}
+            var temp = '{{ i }}';
+            //console.log(temp); 
+            
+            data.push( parseFloat(temp));
+            {% endfor %}
+
+            {% for i in adjlist %}
+            var temp = '{{ i }}';
+            //console.log(temp); 
+            
+            data.push( parseFloat(temp));
+            {% endfor %}
+
+
+            
+            for (var i = 0; i < data.length; i++) {
+                var lon = data[i];
+                var lat = data[i+1];
+                i++;
+
+
+                var locX1 = ((lon - minLong) * (width) / (maxLong - minLong));
+                var locY1 = ((maxLat - (lat)) * (height) / (maxLat - minLat));
+
+                //console.log(lat, lon, locX1, locY1);
+
+                ctx.fillRect(locX1, locY1, 1, 1);
+
+                ctx.stroke();
+            }
+            ///////////////////////////////////////////////////////////
+            
+            ctx.font = "30px Verdana";
+            var gradient = ctx.createLinearGradient(0, 0, c.width, 0);
+            gradient.addColorStop("0", "magenta");
+            gradient.addColorStop("0.5", "blue");
+            gradient.addColorStop("1.0", "red");
+
+            ctx.strokeStyle = gradient;
+            ctx.strokeText("Navigation On Delhi Map :)", 10, 50);
+            
+        }
+        draw();
+        //setInterval(draw,1000/60);
+
+
+        ///////////////////////////////////////////////////
+        // c.onmousewheel = function (event){
+        // //function factoring(){
+        //     var mousex = event.clientX - c.offsetLeft;
+        //     var mousey = event.clientY - c.offsetTop;
+        //     var wheel = event.wheelDelta/120;//n or -n
+
+        //     var zoom = 1 + wheel/2;
+
+        //     ctx.translate(
+        //         originx,
+        //         originy
+        //     );
+        //     ctx.scale(zoom,zoom);
+        //     ctx.translate(
+        //         -( mousex / scale + originx - mousex / ( scale * zoom ) ),
+        //         -( mousey / scale + originy - mousey / ( scale * zoom ) )
+        //     );
+
+        //     originx = ( mousex / scale + originx - mousex / ( scale * zoom ) );
+        //     originy = ( mousey / scale + originy - mousey / ( scale * zoom ) );
+        //     scale *= zoom;
+        // } 
+
+        c.onmousewheel = function (event){
+            draw();
+            event.preventDefault();
+            // Get mouse offset.
+            var mousex = event.clientX - c.offsetLeft;
+            var mousey = event.clientY - c.offsetTop;
+            // Normalize wheel to +1 or -1.
+            var wheel = event.wheelDelta/120;
+            //console.log("wheel=",wheel );
+            //var wheel = 0.2;
+            // Compute zoom factor.
+            var zoom = Math.exp(wheel*zoomIntensity);
+            
+            if(wheel<0){
+                zoom = 0.5
+                maxLat=maxLat*(5.0/4.0);
+                minLat=minLat*(3.0/4.0);
+
+                maxLong=maxLat*(5.0/4.0);
+                minLong=minLat*(3.0/4.0);
+            }
+            if(wheel>0){
+                zoom = 1.5
+
+                maxLat=maxLat*(3.0/4.0);
+                minLat=minLat*(5.0/4.0);
+
+                maxLong=maxLat*(3.0/4.0);
+                minLong=minLat*(5.0/4.0);    
+            }
+            var zoom = Math.exp(wheel*zoomIntensity);
+            //console.log("zoom=",zoom );
+            
+            // Translate so the visible origin is at the ctx's origin.
+            ctx.translate(originx, originy);
+
+            // Compute the new visible origin. Originally the mouse is at a
+            // distance mouse/scale from the corner, we want the point under
+            // the mouse to remain in the same place after the zoom, but this
+            // is at mouse/new_scale away from the corner. Therefore we need to
+            // shift the origin (coordinates of the corner) to account for this.
+            originx -= mousex/(scale*zoom) - mousex/scale;
+            originy -= mousey/(scale*zoom) - mousey/scale;
+            
+            // Scale it (centered around the origin due to the trasnslate above).
+            ctx.scale(zoom, zoom);
+            // Offset the visible origin to it's proper position.
+            ctx.translate(-originx, -originy);
+
+            // Update scale and others.
+            scale *= zoom;
+            visibleWidth = width / scale;
+            visibleHeight = height / scale;
+        }
+
+        // canvas.addEventListener('click', function() { }, false);
+        // function getMousePos(canvas, evt) {
+        //     var rect = canvas.getBoundingClientRect();
+        //     return {
+        //       x: evt.clientX - rect.left,
+        //       y: evt.clientY - rect.top
+        //     };
+        // }
+
+        // c.addEventListener('click', function() { 
+        //     var elem = document.getElementById('myCanvas'),
+        //         elemLeft = elem.offsetLeft,
+        //         elemTop = elem.offsetTop;
+        //     // console.log("elemLeft=", elemLeft, "elemTop=", elemTop);
+
+        //     var rect = c.getBoundingClientRect();
+        //     var x =event.clientX - rect.left;
+        //     var y = event.clientY - rect.top;
+        //     // console.log("x=", x, "y=", y);
+        //     // console.log("rect.left=", rect.left, "rect.top=", rect.top);
+
+        // }, false);
+
+
+        ////////////////////////////////////////////////////////////////
+        /////////////////Zoom in Zoom Out./////////////////////////////
+        function rtreeAjax(admin_level, minLat, minLon, maxLat, maxLon){
+
+            console.log("here");
             var request = $.ajax({
-                url: "/app1/list",
+                url: "/app1/rtree",
                 type: "POST",
-                data: { search: name } ,            
+                data: { admin_level:admin_level, minLat: minLat, minLon:minLon, maxLat:maxLat, maxLon:maxLon} ,            
                 dataType: "html"
             });
 
             request.done(function(msg) {
-                console.log("response= ", msg);
-                $("#mybox").html(msg);          
+                obj = JSON.parse(msg);
+                console.log(obj);
+
+                // ids=obj.id;//array
+                // names=obj.name;//array
+
+                // console.log("response= ",ids);
+                
             });
 
             request.fail(function(jqXHR, textStatus) {
                 alert( "Request failed: " + textStatus );
             });
         }
-    </script>
-    <meta charset="utf-8" />
-    <title>My jQuery Ajax test</title>
-    <style type="text/css">
-        #mybox {
-            width: 300px;
-            height: 250px;
-            border: 1px solid #999;
+
+        $("#OUT").on("click", function(){
+            console.log('out');
+            if(admin_level==1){
+                alert("Cant be further Zoomed Out");
+            }
+            else{
+                admin_level-=1;
+                rtreeAjax(admin_level, minLat, minLong, maxLat, maxLong)
+
+
+            }
+
+        });
+        
+        $("#IN").on("click", function(){
+            console.log('in');
+            if(admin_level==6){
+                alert("Cant be further Zoomed In");
+            }
+            else{
+                admin_level+=1;
+                console.log("loccss:= ", minLat, minLong);
+                rtreeAjax(admin_level, minLat, minLong, maxLat, maxLong)
+
+            }
+        });
+
+
+        //////////////////////////////////////////////////////////////////
+        
+        ///////////////// Marker on Map ////////////////////////////////
+        var PointChooseFlag=0;
+
+        // astar by point pick  type 2 
+        function astarAjax(Lat1, Lon1, Lat2, Lon2){
+
+            console.log("here");
+            var request = $.ajax({
+                url: "/app1/astar",
+                type: "POST",
+                data: { type:1, Lat1: Lat1,Lon1:Lon1,Lat2:Lat2,Lon2:Lon2} ,            
+                dataType: "html"
+            });
+
+            request.done(function(msg) {
+                obj = JSON.parse(msg);
+                console.log(obj);
+
+                // ids=obj.id;//array
+                // names=obj.name;//array
+
+                // console.log("response= ",ids);
+                
+            });
+
+            request.fail(function(jqXHR, textStatus) {
+                alert( "Request failed: " + textStatus );
+            });
         }
-    </style>
 
-</head>
+        function mark(img, event, height, width){
+            //console.log("here1,PointChooseFlag", PointChooseFlag);
 
-<body>
- 
-    <input type="text" name="search_name" class="form-control" value="">
+            // var x = Math.round(event.offsetX - width/2);
+            // var y = Math.round(event.offsetY - height/2);
+
+            var x = Math.round(event.offsetX-3);
+            var y = Math.round(event.offsetY -height -2);
+
+            ctx.drawImage(img,x,y, height, width);
+            PointChooseFlag+=1;
+        }
+
+        // $("#hide").click(function(){
+        //     $("#SearchByNameDiv1").hide();
+        //     $("#SearchByNameDiv2").hide();
+        // });
+
+        // $("#show").click(function(){
+        //     $("p").show();
+        // });
+        
+        $("#SearchByName").on("click", function(){
+            $("#SearchByNameDiv1").show();
+            $("#SearchByNameDiv2").show();
+            
+            // document.getElementById('MarkingRadio').checked = false;
+            // document.getElementById('NameSearchRadio').checked = false;
+
+            $("#MarkingRadio").hide();
+            $("#NameSearchRadio").hide();
+            $("#SearchByNameForDirDiv1").hide();
+            $("#SearchByNameForDirDiv2").hide();
+            
+             
+        });
+
+        $("#MarkingRadio").on("click", function(){
+            NameSearchRadioCheck=0;
+            $("#SearchByNameForDirDiv1").hide();
+            $("#SearchByNameForDirDiv2").hide();
+
+            PointChooseFlag=0;
+            var x1, x2, y1, y2;
+            {% load static %}
+            // console.log("static=", '{% static "img/marker.png" %}');
+            
+            
+
+            var img1 = new Image();
+            img1.src ='{% static "img/src.png" %}';
+            
+            var img2 = new Image();
+            img2.src = '{% static "img/dst.png" %}';
+            c.onclick = function(event){
+
+                var rect = c.getBoundingClientRect();
+                    //     var x =event.clientX - rect.left;
+                    //     var y = event.clientY - rect.top;
+                    //     // console.log("x=", x, "y=", y);
+
+                    if(PointChooseFlag%2==0){
+                     x1 =event.clientX - rect.left;
+                     y1 = event.clientY - rect.top;
+
+                     mark(img1, event, 30, 30);
+                 }
+                 else{
+                    x2 =event.clientX - rect.left;
+                    y2 = event.clientY - rect.top;
+                    mark(img2, event, 30 , 30 );
+                    console.log("clicked locs=", x1,y1,x2, y2);
+                    
+                    //x1 = ((lon1 - minLong) * (width) / (maxLong - minLong));
+                    x1 = ((x1*(maxLong - minLong))/(width)) +  minLong;
+
+                    //y1 = ((maxLat - (lat1)) * (height) / (maxLat - minLat));
+                    y1 = (((y1*(maxLat - minLat))/(height)) -  maxLat) * (-1);
+
+                    //x2 = ((lon2 - minLong) * (width) / (maxLong - minLong));
+                    x2 = ((x2*(maxLong - minLong))/(width)) +  minLong;
+
+                    //y2 = ((maxLat - (lat2)) * (height) / (maxLat - minLat));
+                    y2 = (((y2*(maxLat - minLat))/(height)) -  maxLat) * (-1);
+
+                    astarAjax(x1, y1, x2, y2);
+
+                }
+
+            };
+
+        });
+
+        $("#NameSearchRadio").on("click", function(){
+            NameSearchRadioCheck=1;
+            $("#SearchByNameForDirDiv1").show();
+            $("#SearchByNameForDirDiv2").show();
+            
+
+        });
+
+
+        $("#SrcDst").on("click", function(){
+            $("#MarkingRadio").show();
+            $("#NameSearchRadio").show();
+
+            $("#SearchByNameDiv1").hide();
+            $("#SearchByNameDiv2").hide();
+
+
+            if(NameSearchRadioCheck==1) {
+                //console.log("checked radio");
+                $("#SearchByNameForDirDiv1").show();
+                $("#SearchByNameForDirDiv2").show();
+
+            }
+            else{
+                //console.log("unchecked radio");
+                $("#SearchByNameForDirDiv1").hide();
+                $("#SearchByNameForDirDiv2").hide();
+            } 
+
+        });
+
+        
+
+        
+        
+        //////////////////////////////////////////////////////////////
+
+
+
+        var rect = c.getBoundingClientRect();
+        
+        var left1=rect.left + width; 
+        var top1=rect.top ;
+        console.log("left1=", left1.toString());
+        console.log("top1=", top1.toString());
+
+        
+
+        document.getElementById("IN").style.top = (top1).toString()+"px";
+        document.getElementById("IN").style.left = (left1+10).toString()+"px";
+
+        document.getElementById("OUT").style.top =  (top1+35).toString()+"px";
+        document.getElementById("OUT").style.left = (left1+10).toString()+"px";
+
+        document.getElementById("SearchByName").style.top =  (top1+70).toString()+"px";
+        document.getElementById("SearchByName").style.left = (left1+10).toString()+"px";
+
+        document.getElementById("SrcDst").style.top =  (top1+105).toString()+"px";
+        document.getElementById("SrcDst").style.left = (left1+10).toString()+"px";
+
+        // document.getElementById("Directions").style.top =  (top1+140).toString()+"px";
+        // document.getElementById("Directions").style.left = (left1+10).toString()+"px";
+        
+        // MarkingRadio
+        // NameSearchRadio
+        document.getElementById("MarkingRadio").style.top =  (top1+140).toString()+"px";
+        document.getElementById("MarkingRadio").style.left = (left1+20).toString()+"px";
+
+        document.getElementById("NameSearchRadio").style.top =  (top1+170).toString()+"px";
+        document.getElementById("NameSearchRadio").style.left = (left1+10).toString()+"px";
+        
+        
+
+        ///////////////////////////////////////////////////////////////
+
+        function displayNodes(data, img1){
+            clear();
+            
+            //console.log("nodes inside inside, data=", data);
+            
+            for (var i = 0; i < data.length; i+=2) {
+                var lon = data[i+1];
+                var lat = data[i];
+                var locX1 = ((lon - minLong) * (width) / (maxLong - minLong));
+                var locY1 = ((maxLat - (lat)) * (height) / (maxLat - minLat));
+
+                //console.log(lat, lon, locX1, locY1);
+                var x = Math.round(locX1- 30/2);
+                var y = Math.round(locY1 - 30);
+
+                ctx.drawImage(img1,x,y, 30, 30);
+            }
+        }
+
+        function displayWays(list, dlist){
+            clear();
+            var color=['#6f1984', '#e74c3c','#e80633', '#f1c40f', '#3498db' ,'#6f0b01',  '#4ef442','#9b59b6','#414ff4', '#e74c3c' , '#1abc9c', '#ff0000',];
+            
+            console.log("list=", list, "dlist=", dlist)
+            
+            //count=0;
+            if(dlist.length!=1){
+                for (var i=0; i < dlist.length-1; i++) {
+                  
+
+                    var lon1 = list[2*i+1];
+                    var lat1 = list[2*i];
+                    var lon2 = list[2*i+3];
+                    var lat2 = list[2*i+2];
+                    
+                    
+                    
+
+                    var locX1 = ((lon1 - minLong) * (width) / (maxLong - minLong));
+                    var locY1 = ((maxLat - (lat1)) * (height) / (maxLat - minLat));
+                    var locX2 = ((lon2 - minLong) * (width) / (maxLong - minLong));
+                    var locY2 = ((maxLat - (lat2)) * (height) / (maxLat - minLat));
+
+                    ctx.beginPath();
+                    ctx.moveTo(locX1,locY1);
+                    ctx.lineTo(locX2,locY2);
+                    ctx.lineWidth = 2;
+                    
+                    
+                    ctx.strokeStyle = colorWay[colorCountForWay];
+                    ctx.stroke();
+
+                    // ctx.fillRect(locX1, locY1, 1, 1);
+                    // ctx.stroke();
+
+                    // ctx.fillRect(locX2, locY2, 1, 1);
+                    // ctx.stroke();
+
+                    if(dlist[i+1]==1){
+                        //break;
+                        i+=1;
+                        
+                        colorCountForWay+=1;
+                        if(colorCountForWay == colorWay.length){
+                            colorCountForWay=0;
+                        }
+
+                    }
+                    
+                }
+            }                
+
+            colorCountForWay+=1;
+            if(colorCountForWay == colorWay.length){
+                colorCountForWay=0;
+            }
+        }
+
+
+        
+        
+        $("body").on("click", ".list-group-item", function(){
+
+            var parent=$(this).parent();
+            var type = parent.attr("id");
+            var name= this.id;
+
+            var id= $(this).attr("name");
+            console.log("list node/way id=", id);
+
+            //console.log('id of clicked item= ', this.id, "name of selected item=", parent.attr("id"));
+            if(type=="nodes" || type=="ways"){
+                
+                document.getElementsByName('search_name')[0].value=name;
+                var img1 = new Image();
+                img1.src ='{% static "img/pin.png" %}';
+
+                var request = $.ajax({
+                    url: "/app1/data",
+                    type: "POST",
+                    data: { name: name, type:type } ,            
+                    dataType: "html"
+                });
+
+                request.done(function(msg) {
+                    obj = JSON.parse(msg);
+                    //console.log("obj= ",obj);
+                    
+                    var way_list=obj.way_list;
+                    var dlist=obj.dlist;
+                    var node_list=obj.node_list;
+                    //longs=obj.long;
+                    
+                    //list= [28.492847442626953, 77.00435638427734, 28.434986114501953, 77.05077362060547, 28.619922637939453, 77.07022094726562, 28.503517150878906, 77.20549774169922, 28.758880615234375, 77.1546401977539, 28.47164535522461, 77.49659729003906, 28.49455451965332, 77.28811645507812, 28.67414093017578, 77.44739532470703, 28.60383415222168, 77.24569702148438, 28.431650161743164, 77.00296783447266, 28.322860717773438, 77.32283782958984];
+
+                    if(type=="nodes"){
+                        console.log("nodes inside");
+                       displayNodes(node_list, img1); 
+                    }
+                    else if(type=="ways"){
+                        console.log("ways inside");
+                        displayWays(way_list, dlist);    
+                    }
+                    
+                });
+
+                request.fail(function(jqXHR, textStatus) {
+                    alert( "Request failed: " + textStatus );
+                });
+
+            }
+            else if(type=="2"){
+                document.getElementsByName('search_name_src')[0].value=name;
+                document.getElementsByName('search_name_src_id')[0].value=id;
+
+            }
+            else if(type=="3"){
+                document.getElementsByName('search_name_dst')[0].value=name;
+                document.getElementsByName('search_name_dst_id')[0].value=id;
+            }
+            
+        });
+
+    });
+
+
+        ////////////////////////////////
+
+    function listing(way_names, way_ids,node_names, node_ids, type) {
+
+        var div = $('<div/>');
+        if(type==1){
+
+            var h1 = $('<h4>Ways:</h4>');
+            if(way_names.length!=0){
+                div.append(h1);
+                var ul1 = $('<ul class="list-group" id="ways"  />').appendTo(div);
+                for(var i=0 ;i<way_names.length; i++){
+                    var li = $('<li class="list-group-item" />').appendTo(ul1);
+                    li.attr("id", way_names[i]);
+                    li.attr("name", way_ids[i]);
+                    var t =way_names[i];
+                    li.append(t);
+                }
+            }
+
+
+            
+
+            var h2 = $('<h4>Nodes:</h4>');
+            if(node_names.length!=0){
+                div.append(h2);
+                var ul2 = $('<ul class="list-group" id="nodes"  />').appendTo(div);
+
+                for(var i=0 ;i<node_names.length; i++){
+                    var li = $('<li class="list-group-item" />').appendTo(ul2);
+                    li.attr("id", node_names[i]);
+                    li.attr("name", node_ids[i]);
+                    var t =node_names[i];
+                    li.append(t);
+                }
+            }
+
+        }
+        else if(type==2 || type==3){
+            var h2 = $('<h4>Nodes:</h4>');
+            if(node_names.length!=0){
+                div.append(h2);
+                var ul2;
+                if(type==2){
+                    ul2 = $('<ul class="list-group" id="2"  />').appendTo(div);
+                    //node_ids
+
+                }
+                else if (type==3){
+                    ul2 = $('<ul class="list-group" id="3"  />').appendTo(div);
+                    //node_ids
+                }
+               
+                for(var i=0 ;i<node_names.length; i++){
+                    var li = $('<li class="list-group-item" />').appendTo(ul2);
+                    li.attr("id", node_names[i]);
+                    li.attr("name", node_ids[i]);
+                    var t =node_names[i];
+                    li.append(t);
+                }
+            }
+
+        }
+        
+        return div;
+    }
+
+    ///////////////////////////
+
+    function myCall(name, type) {
+        console.log("here", "type in my call=", type);
+        var request = $.ajax({
+            url: "/app1/list",
+            type: "POST",
+            data: { search: name, type: type } ,            
+            dataType: "html"
+        });
+
+        request.done(function(msg) {
+            obj = JSON.parse(msg);
+            way_ids=obj.way_ids;
+            way_names=obj.way_names;
+            
+            node_ids=obj.node_ids;
+            node_names=obj.node_names;
+
+
+            console.log("response= ",way_ids);
+            console.log("response= ",way_names);
+            console.log("response= ",node_ids);
+            console.log("response= ",node_names);
+            //$("#mybox").html(msg);
+
+            if(type==1){
+                $('.listing1').html(listing(way_names, way_ids,node_names, node_ids, type));
+            }
+            else if(type==2 || type==3){
+                $('.listing2').html(listing(way_names, way_ids,node_names, node_ids, type));
+            }
+
+        });
+
+        request.fail(function(jqXHR, textStatus) {
+            alert( "Request failed: " + textStatus );
+        });
+    }
     
+    // astar by name search  type 2 
+    function getDirections(srcId, dstId) {
+        console.log('GetDirections, ids=', srcId, dstId);
+        var request = $.ajax({
+            url: "/app1/astar",
+            type: "POST",
+            data: { type:2, srcId:srcId,  dstId:dstId } ,            
+            dataType: "html"
+        });
 
-    The following div will be updated after the call:<br />
-    <div id="mybox">
+        request.done(function(msg) {
+            obj = JSON.parse(msg);
+            console.log("from astar type 2:", obj)
 
+            
+        });
+
+        request.fail(function(jqXHR, textStatus) {
+            alert( "Request failed: " + textStatus );
+        });
+    }
+
+
+
+    //////////////////////
+</script>
+
+<meta charset="utf-8" />
+<title>MinorProject</title>
+
+<style type="text/css">
+    /*#mybox {
+        width: 300px;
+        height: 200px;
+        border: 1px solid #999;
+    }*/
+    .list-group-item {
+        cursor: pointer
+    }
+    .listing1 div ul {
+        max-height: 200px;
+        overflow-y:scroll;
+    }
+    .listing2 div ul {
+        max-height: 200px;
+        overflow-y:scroll;
+    }
+</style>
+
+{% endblock %} 
+
+
+{% block main %}
+{% load static %}
+<div>
+    <canvas id="myCanvas" width="1000" height="500"  style="z-index:1; border:1px solid red;">
+    </canvas>
+
+    <button id="IN" type="button" class="btn btn-default btn-sm" style="z-index:2; position:absolute; ">
+      <span class="glyphicon glyphicon-zoom-in"></span> Zoom-In
+  </button>
+
+  <button id="OUT" type="button" class="btn btn-default btn-sm" style="z-index:2; position:absolute; ">
+      <span class="glyphicon glyphicon-zoom-out"></span> Zoom-Out
+  </button>
+
+  <button id="SearchByName" type="button" class="btn btn-default btn-sm" style="z-index:2; position:absolute; ">
+     <span class="glyphicon glyphicon-search"></span> Search By Name
+  </button>
+
+  <button id="SrcDst" type="button" class="btn btn-default btn-sm" style="z-index:2; position:absolute; ">
+      <span class="glyphicon glyphicon-screenshot"></span> Select SRC and DST
+  </button>
+
+  <!-- <button id="Directions" type="button" class="btn btn-default btn-sm" style="z-index:2; position:absolute; ">
+      <span class="glyphicon glyphicon-road"></span> Get-Directions
+  </button>
+ -->
+
+ <!-- <form> -->
+    <label id="MarkingRadio" class="radio-inline" style="z-index:2; position:absolute;">
+      <input type="radio" name="optradio">Marking Point On Map
+    </label>
+
+    <label id="NameSearchRadio" class="radio-inline" style="z-index:2; position:absolute;">
+      <input type="radio" name="optradio">Searching By Name
+    </label>
+
+    
+  <!-- </form> -->
+
+
+
+
+
+</div>    
+
+
+
+<div id="SearchByNameDiv1"class="form-group">
+    <div class="col-lg-4">
+        <!-- <input type="text" class="form-control" placeholder=".col-lg-2"> -->
+        <br>
+        <label for="inputdefault">Search By Name:</label>
+
+        <input type="text" name="search_name" class="form-control" value="">
+        <br>
+
+        <button type="button"  onclick="myCall(document.getElementsByName('search_name')[0].value, 1)" class="btn btn-default" value="Search" />
+            <span class="glyphicon glyphicon-search"></span> Search
+        </button>
+
+
+    <br><br>
     </div>
-    <input type="button" onclick="myCall(document.getElementsByName('search_name')[0].value)" value="Update" />
 
-</body>
-</html>
+</div>
+<div id="SearchByNameDiv2"class="col-lg-4">
+
+    
+    <div class="listing1"> 
+    </div>
+
+    <!-- <div id="mybox">
+    </div> -->
+
+</div>
+
+
+
+<div id="SearchByNameForDirDiv1"class="form-group">
+    <div class="col-lg-4">
+        <!-- <input type="text" class="form-control" placeholder=".col-lg-2"> -->
+        <br>
+        <label for="inputdefault">Search For SRC By Name:</label>
+
+        <input type="text" name="search_name_src" class="form-control" value="">
+        <input type="hidden" name="search_name_src_id" value="">
+        
+        <button type="button"  onclick="myCall(document.getElementsByName('search_name_src')[0].value, 2)" class="btn btn-default" value="Search" />
+            <span class="glyphicon glyphicon-search"></span> Search
+        </button>
+
+        <br><br>
+
+        <label for="inputdefault">Search For DST By Name:</label>
+
+        <input type="text" name="search_name_dst" class="form-control" value="">
+        <input type="hidden" name="search_name_dst_id" value="">
+        <button type="button"  onclick="myCall(document.getElementsByName('search_name_dst')[0].value, 3)" class="btn btn-default" value="Search" />
+            <span class="glyphicon glyphicon-search"></span> Search
+        </button>
+
+        <br><br>
+        
+        <button id="Directions" type="button"  onclick="getDirections(document.getElementsByName('search_name_src_id')[0].value, document.getElementsByName('search_name_dst_id')[0].value)" class="btn btn-default btn-sm" >
+            <span class="glyphicon glyphicon-road"></span> Get-Directions
+        </button>
+       
+       
+
+        <!-- <button type="button"  onclick="myCall(document.getElementsByName('search_name')[0].value)" class="btn btn-default" value="Search" />
+            <span class="glyphicon glyphicon-search"></span> Search
+        </button> -->
+
+
+    <br><br>
+    </div>
+
+</div>
+<div id="SearchByNameForDirDiv2"class="col-lg-4">
+
+    
+    <div class="listing2"  > 
+    </div>
+
+    <!-- <div id="mybox">
+    </div> -->
+
+</div>
+
+    <!-- <img src="{% static "img/marker.png" %}" alt="My image"/>
+-->
+                <!-- <img src="{% static "img/src.png" %}" alt="My image"/>
+                
+                <img src="{% static "img/dst.png" %}" alt="My image"/> -->
+
+{% endblock %}

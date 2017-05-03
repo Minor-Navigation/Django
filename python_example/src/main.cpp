@@ -3,11 +3,23 @@
 #include <fstream>
 #include <vector>
 #include <string>
+#include <iostream>
 using namespace std;
 namespace py = pybind11;
 
 PYBIND11_MAKE_OPAQUE(std::vector<long long >);
 PYBIND11_MAKE_OPAQUE(std::vector<string>);
+PYBIND11_MAKE_OPAQUE(std::vector<double>);
+
+int add(int i, int j) {
+    return i + j;
+}
+
+int subtract(int i, int j) {
+    return i - j;
+}
+
+
 
 #define ll long long
 #define way_size 256
@@ -22,7 +34,7 @@ public:
     ll next;
     int delimiter;
     way_link()
-	{
+    {
         next=-1;
         delimiter=-1;
     }
@@ -121,10 +133,10 @@ public:
     vector <ll> delimiter_list;
     
      trie(){
-        file.open("/home/arjun/Desktop/MajorProjectMap/Django/app1/trie_way.txt",ios::app|ios::in|ios::out);
-        file_link.open("/home/arjun/Desktop/MajorProjectMap/Django/app1/trie_link_way.txt",ios::app|ios::in|ios::out);
-        file_node.open("/home/arjun/Desktop/MajorProjectMap/Django/app1/trie.txt",ios::app|ios::in|ios::out);
-        file_link_node.open("/home/arjun/Desktop/MajorProjectMap/Django/app1/trie_link.txt",ios::app|ios::in|ios::out);
+        file.open("/home/arjun/Desktop/MajorProjectMap/Django/app1/trie_way.txt",ios::app|ios::in|ios::out|ios::binary);
+        file_link.open("/home/arjun/Desktop/MajorProjectMap/Django/app1/trie_link_way.txt",ios::app|ios::in|ios::out|ios::binary);
+        file_node.open("/home/arjun/Desktop/MajorProjectMap/Django/app1/trie.txt",ios::app|ios::in|ios::out|ios::binary);
+        file_link_node.open("/home/arjun/Desktop/MajorProjectMap/Django/app1/trie_link.txt",ios::app|ios::in|ios::out|ios::binary);
     }
 
     void close(){
@@ -375,7 +387,6 @@ public:
 
 ////R----- treee ##########################################################
 
-
 #define min(a,b) ((a<b) ? (a) : (b))
 #define max(a,b) ((a>b) ? (a) : (b))
 #define abs(a) ((a>0) ? (a) : ((-1)*a))
@@ -387,7 +398,7 @@ public:
 #define pb push_back
 #define mp make_pair
 #define fastio ios_base::sync_with_stdio(false); cin.tie(0);
-#define fileio freopen("NodeDataForRTree.txt", "r", stdin); freopen("output.txt", "w", stdout);
+#define fileio freopen("input.txt", "r", stdin); freopen("output.txt", "w", stdout);
 #define MAX_CHILD 10
 #define null NULL
 #define square(a) a*a
@@ -432,48 +443,79 @@ public:
     }
 } node;
 
+
+class nodeInd{
+public:
+    ll id,ptr,adjPtr;
+    int size;
+};
+
+class nodeData {
+public:
+    ll id;
+    double lon,lat;
+    vector<ll> adj,adjPtr;
+    char* otherData;
+    nodeData(){
+
+    }
+};
+
 class rtree{
 
 
 public:
+    fstream f,f1,f2;
     vector<ll> nodes_in_box;
     ll root;
-    fstream file;
-
-    rtree(ll r, string filename)
+    fstream file_rtree;
+    ll value;
+    rtree(ll r)
     {
+        f.open("/home/arjun/Desktop/MajorProjectMap/Django/app1/NodeIndexNew.ind",ios::in | ios::out | ios::binary); 
+        f1.open("/home/arjun/Desktop/MajorProjectMap/Django/app1/CompleteNodeData.dat",ios::in | ios::out | ios::binary); 
+        f2.open("/home/arjun/Desktop/MajorProjectMap/Django/app1/adjacency.dat",ios::in | ios::out | ios::binary); 
         root=r;
+        value=0;
         if(r!=-1)
-            file.open("/home/arjun/Desktop/MajorProjectMap/Django/app1/test.txt",ios::in | ios::out | ios::binary);
+            file_rtree.open("/home/arjun/Desktop/MajorProjectMap/Django/app1/test.txt",ios::in | ios::out | ios::binary);
         else
-            file.open("/home/arjun/Desktop/MajorProjectMap/Django/app1/test.txt",ios::in | ios::out | ios::trunc | ios::binary);
+            file_rtree.open("/home/arjun/Desktop/MajorProjectMap/Django/app1/test.txt",ios::in | ios::out | ios::trunc | ios::binary);
 
     }
 
-
+    void close(){
+        f.close();
+        f1.close();
+        f2.close();
+        file_rtree.close();
+    }
 
     void boundingBox_(double lo1,double lo2, double la1, double la2, int level, ll ptr)
-    {
+    {   value+=5;
         if(ptr==-1)
             return;
 
         node n;
-        file.seekp(ptr);file.seekg(ptr);
-        file.read((char*)&n , sizeof(node));
-
-
+        file_rtree.seekp(ptr);file_rtree.seekg(ptr);
+        file_rtree.read((char*)&n , sizeof(node));
+        value=n.id;
+       // cout<<n.id<endl<<endl;
         if ( n.lon2>=lo1 && lo2>=n.lon1 && n.lat2>=la1 && la2>=n.lat1)
         {
         }
         else
             return;
 
-        if(n.level>level){
+        if(n.level>level)
             return;
-        }
 
         if(n.isLeaf)
+        {   value=n.id;
+
             nodes_in_box.pb(n.id);
+           // cout<<n.id<<" "<<n.level<<endl;
+        }
 
         for(int i=0;i<n.no_child;i++)
         {
@@ -504,6 +546,98 @@ public:
         boundingBox_(lo1,lo2,la1,la2,level,root);
     }
 
+
+    nodeData queryNode(ll id)
+    {
+
+        nodeData nd;
+
+        char *res = NULL;
+
+        f.seekg(0,ios::end);
+        ll no_nodes=f.tellg();
+        nodeInd in;
+        no_nodes/=sizeof(nodeInd);
+        int size;
+        ll temp;
+        ll s=0,e=no_nodes-1,m;
+        while(s<=e)
+        {
+            m=(s+e)/2;
+            f.seekg(m*sizeof(nodeInd));f.seekp(m*sizeof(nodeInd));
+            f.read((char*)&in,sizeof(nodeInd));
+            if(in.id==id)
+            {
+                //cout<<"Found";
+                nd.otherData= new char[in.size];
+                f1.seekg(in.ptr);f1.seekp(in.ptr);
+                f1.read(nd.otherData,in.size);
+
+                f2.seekg(in.adjPtr);f2.seekp(in.adjPtr);
+                f2>>nd.id>>nd.lon>>nd.lat>>size;
+                while(size--)
+                {
+                    f2>>temp;
+                    nd.adj.pb(temp);
+                    f2>>temp;
+                    nd.adjPtr.pb(temp);
+                }
+
+                return nd;
+            }
+            if(in.id<id)
+                s=m+1;
+            else
+                e=m-1;
+
+        }
+        nd.id=-1;
+        
+        return nd;
+
+    }
+
+    nodeData queryNode2(ll id ,ll ptr)
+    {
+
+        nodeData nd;
+        char *res = NULL;
+
+        nodeInd in;
+        int size;
+        ll temp;
+
+    
+        f.seekg(ptr);f.seekp(ptr);
+        f.read((char*)&in,sizeof(nodeInd));
+        if(in.id==id)
+        {
+            //cout<<"Found";
+            nd.otherData= new char[in.size];
+            f1.seekg(in.ptr);f1.seekp(in.ptr);
+            f1.read(nd.otherData,in.size);
+
+            f2.seekg(in.adjPtr);f2.seekp(in.adjPtr);
+            f2>>nd.id>>nd.lon>>nd.lat>>size;
+            while(size--)
+            {
+                f2>>temp;
+                nd.adj.pb(temp);
+                f2>>temp;
+                nd.adjPtr.pb(temp);
+            }
+
+            return nd;
+        }
+        nd.id=-1;
+        
+        return nd;
+
+    }
+
+
+
+
 };
 
 
@@ -512,19 +646,27 @@ PYBIND11_PLUGIN(example) {
     py::module m("example", R"pbdoc(
         Pybind11 example plugin
         -----------------------
-
-        .. currentmodule:: python_example
-
+        .. currentmodule:: example
         .. autosummary::
            :toctree: _generate
-
            add
            subtract
     )pbdoc");
 
 
+    m.def("add", &add, R"pbdoc(
+        Add two numbers
+        Some other explanation about the add function.
+    )pbdoc");
+
+    m.def("subtract", &subtract, R"pbdoc(
+        Subtract two numbers
+        Some other explanation about the subtract function.
+    )pbdoc");
+    
     py::bind_vector<std::vector<long long>>(m, "Vectorll");
-    py::bind_vector<std::vector<string>>(m, "VectorString");
+    py::bind_vector<std::vector<string>>(m, "Vectorstring");
+    py::bind_vector<std::vector<double>>(m, "Vectord");
 
     py::class_<trie>(m,"trie")
     .def(py::init<>())
@@ -555,14 +697,24 @@ PYBIND11_PLUGIN(example) {
     .def_readwrite("wayptr", &way::wayPtr)
     .def_readwrite("wayptr_end", &way::wayPtr_end)
     .def("getlevel", &way::getlevel);
-
+    
     py::class_<rtree>(m,"rtree")
-    .def(py::init<long long ,string>())
+    .def(py::init<long long >())
     .def("boundingBox", &rtree::boundingBox)
+    .def("queryNode", &rtree::queryNode)
+    .def("queryNode2", &rtree::queryNode2)
+    .def("close", &rtree::close)
     .def_readwrite("nodes_in_box", &rtree::nodes_in_box)
-    .def_readwrite("root", &rtree::root);
+    .def_readwrite("root", &rtree::root)
+    .def_readwrite("value", &rtree::value);
 
-
+    py::class_<nodeData>(m,"nodeData")
+    .def(py::init<>())
+    .def_readwrite("id", &nodeData::id)
+    .def_readwrite("lon", &nodeData::lon)
+    .def_readwrite("lat", &nodeData::lat)
+    .def_readwrite("adj", &nodeData::adj)
+    .def_readwrite("adjPtr", &nodeData::adjPtr);
 
 
 #ifdef VERSION_INFO
