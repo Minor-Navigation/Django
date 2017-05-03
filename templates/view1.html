@@ -76,7 +76,7 @@
                     var locY2 = ((maxLat - (lat2)) * (height) / (maxLat - minLat));
                     //console.log("here",locX1, locY1, locX2, locY2 );
 
-                    ctx.strokeStyle = "RED";
+                    ctx.strokeStyle = "BLUE";
                     ctx.beginPath();
                     ctx.moveTo(locX1,locY1);
                     ctx.lineTo(locX2,locY2);
@@ -227,9 +227,9 @@
                     ctx.stroke();
                     
                     
-                    ctx.strokeStyle = "RED";
-                    ctx.fillRect(locX2, locY2, 2, 2);
-                    ctx.stroke();
+                    // ctx.strokeStyle = "RED";
+                    // ctx.fillRect(locX2, locY2, 2, 2);
+                    // ctx.stroke();
                     
                 }
             }
@@ -377,9 +377,9 @@
                 console.log("data= ",data,  "len=", data.length);
                 console.log("adjlist= ",adjlist);
 
-                var count=-1;
+                var count1=-1;
                 for (var i = 0; i < data.length-1; i+=2) {
-                    count++;
+                    count1++;
 
 
                     //for (var i = 0; i < 4;i+=2) {
@@ -389,14 +389,43 @@
                     
 
 
-                    var locX1 = ((lon1 - minLong) * (width) / (maxLong - minLong));
+                    var locX1 = ((lon1 - minLon) * (width) / (maxLon - minLon));
                     var locY1 = ((maxLat - (lat1)) * (height) / (maxLat - minLat));
 
-                    ctx.strokeStyle = "BLUE";
-                    //console.log(lat, lon, locX1, locY1);
+                    // ctx.strokeStyle = "BLUE";
+                    // //console.log(lat, lon, locX1, locY1);
                     
-                    ctx.fillRect(locX1, locY1, 2, 2);
-                    ctx.stroke();
+                    // ctx.fillRect(locX1, locY1, 2, 2);
+                    // ctx.stroke();
+
+                    for (var j = 0; j<adjlist[count1].length-1 ; j+=2) {
+                    
+                        
+                        var lon2 = adjlist[count1][j];
+                        var lat2 = adjlist[count1][j+1];
+                        
+                        //if(count==0 || count==1) 
+                        //console.log("ad=", lon2, lat2);                   
+                        
+                        var locX2 = ((lon2 - minLon) * (width) / (maxLon - minLon));
+                        var locY2 = ((maxLat - (lat2)) * (height) / (maxLat - minLat));
+                        
+                        
+                        // if(locX2<=0.0 || locY2<=0.0 || locX2>=1000.0 || locY2>=500.0)
+                        //console.log("locs=", locX2,locY2)
+                        ctx.strokeStyle = "RED";
+                        ctx.beginPath();
+                        ctx.moveTo(locX1,locY1);
+                        ctx.lineTo(locX2,locY2);
+                        ctx.lineWidth = 1;
+                        ctx.stroke();
+                        
+                        
+                        // ctx.strokeStyle = "RED";
+                        // ctx.fillRect(locX2, locY2, 2, 2);
+                        // ctx.stroke();
+                        
+                    }
                 }
 
                 // var data = JSON.parse('{{list}}');
