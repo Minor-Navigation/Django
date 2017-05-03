@@ -3,8 +3,9 @@ import example as e
 vi_graph=[]
 vi_cord_list=[]
 def adjlist_generate(r):
-
-	for i in xrange(0, len(r.nodes_in_box)):
+	del vi_graph[:]
+	del vi_cord_list[:]
+	for i in range(len(r.nodes_in_box)):
 		nd=r.queryNode(r.nodes_in_box[i])
 		vi_cord_list.append(nd.lon)
 		vi_cord_list.append(nd.lat)
@@ -14,6 +15,13 @@ def adjlist_generate(r):
 			mi.append(md.lon)
 			mi.append(md.lat)
 		vi_graph.append(mi)
+
+def AStar_tocord(r):
+	del vi_cord_list[:]
+	for i in range(len(r.path) ):
+		nd=r.queryNode(r.path[i])
+		vi_cord_list.append(nd.lon)
+		vi_cord_list.append(nd.lat)
 
 
 t=e.trie()
@@ -39,7 +47,16 @@ print(r.nodes_in_box )
 #	print(i)
 
 adjlist_generate(r)
-print(vi_graph)
 print(vi_cord_list)
+##################
+r.AStar(910664803,913535624)
+
+AStar_tocord(r)
+
+print(vi_cord_list)
+
+
+print(r.nearestNode2( 77.22767639160156,28.6144580841064455) )
+
 
 r.close()

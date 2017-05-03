@@ -40,6 +40,13 @@ def adjlist_generate(r):
         vi_graph.append(mi)
         vi_adjgraphids.append(temp)
 
+def AStar_tocord(r):
+    del vi_cord_list[:]
+    for i in range(len(r.path) ):
+        nd=r.queryNode(r.path[i])
+        vi_cord_list.append(nd.lon)
+        vi_cord_list.append(nd.lat)        
+
 
 # r=e.rtree(490811040)
 # print(r.root)
@@ -244,7 +251,7 @@ def rtree(request):
     response['list']=vi_cord_list
     response['adjlist']=vi_graph
 
-
+    r.close()
     #JsonResponse(response)
     #context = {'list': vi_cord_list, 'adjlist': vi_graph}
     #context = {'list': vi_cord_list}
@@ -255,23 +262,63 @@ def rtree(request):
 
 ################################################################
 
+# def nearestNode(Lat, Lon):
+#     response = {'id': -1}
+
+#     # Lat=float(request.POST.get("Lat"))
+#     # Lon=float(request.POST.get("Lon"))
+#     # print("nearestNode", Lat, Lon)
+#     nearestId=r.nearestNode2( Lon,Lat)
+#     print("nearestId", nearestId)
+#     response['id']=nearestId
+#     //return JsonResponse(response)
+    
+    
+
+################################################################
+
 #for returning shortest path. 
 @csrf_exempt
 def astar(request):
+    r=e.rtree(490811040)
+    response = {'list':[]}
+
+
     typeOfAstar=int(request.POST.get("type"))
+
     if(typeOfAstar==1): #point pick on map
         Lat1=float(request.POST.get("Lat1"))
         Lon1=float(request.POST.get("Lon1"))
         Lat2=float(request.POST.get("Lat2"))
         Lon2=float(request.POST.get("Lon2"))
-        print("astar", Lat1, Lon1, Lat2, Lon2)
-        return JsonResponse({'foo':'bar'})
+        nearestId1=r.nearestNode2( Lon1,Lat1)
+        nearestId2=r.nearestNode2( Lon2,Lat2)
+    
+        print("astar", Lat1, Lon1, Lat2, Lon2, "near", nearestId1,nearestId2 )
+        
+        
+        
+        r.AStar(nearestId1,nearestId2)
+        AStar_tocord(r)
+        response['list']=vi_cord_list
+        print("vi_cord_list=", vi_cord_list)
+
+        r.close()
+        return JsonResponse(response)
     
     elif(typeOfAstar==2):  #by name search 
         srcId=long(float(request.POST.get("srcId")))
         dstId=long(float(request.POST.get("dstId")))
-        print("astar", srcId, dstId)
-        return JsonResponse({'foo':'bar'})     
+        print("astar, type2", srcId, dstId)
+        
+        r.AStar(srcId,dstId)
+        AStar_tocord(r)
+        response['list']=vi_cord_list
+        print("vi_cord_list=", vi_cord_list)
+
+
+        r.close()
+        return JsonResponse(response)   
 
 
 ##################extras#####################################

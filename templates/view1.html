@@ -208,6 +208,7 @@
             var canvasWidth=canvas.width;
             var canvasHeight=canvas.height;
             var isDragging=false;
+            var isMoving=false;
             var canMouseXinit;
             var canMouseYinit;
             var canMouseXfin;
@@ -227,7 +228,7 @@
               canMouseX=parseInt(e.clientX-offsetX);
               canMouseY=parseInt(e.clientY-offsetY);
               // clear the drag flag
-              if(isDragging==true){
+              if(isDragging==true && isMoving==true  ){
                 console.log("xdiff=",xdiff, "ydiff=", ydiff  );
 
                     // x1= ((xdiff*(Math.pow(2, admin_level))*(maxLongConst - minLongConst))/(width)) ;
@@ -246,6 +247,7 @@
                 rtreeAjax(admin_level, minLat, minLong, maxLat, maxLong);
               }
               isDragging=false;
+              isMoving=false;
             }
 
             function handleMouseOut(e){
@@ -261,13 +263,15 @@
 
                 
                 if(isDragging){
+                  isMoving=true;
+                    
                   canMouseXfin=parseInt(e.clientX-offsetX);
                   canMouseYfin=parseInt(e.clientY-offsetY);
 
                   xdiff=canMouseXfin-canMouseXinit;
                   ydiff=canMouseYfin-canMouseYinit;
                   
-                  
+                  console.log("before diff",xdiff,ydiff);
 
                   //console.log("diff",xdiff,ydiff, "lat long min max",  minLat, minLong, maxLat, maxLong  );
 
@@ -356,11 +360,11 @@
             }
             else{
                 console.log("loccss:= ", minLat, minLong,maxLat,maxLong );
-                minLat=minLat-(maxLat-minLat)*(0.3000000000000000);
-                minLong=minLong-(maxLong-minLong)*(0.3000000000000000);
+                minLat=minLat-(maxLat-minLat)*(0.20000000000000000);
+                minLong=minLong-(maxLong-minLong)*(0.20000000000000000);
                 
-                maxLat=maxLat+(maxLat-minLat)*(0.3000000000000000);
-                maxLong=maxLong+(maxLong-minLong)*(0.3000000000000000);
+                maxLat=maxLat+(maxLat-minLat)*(0.20000000000000000);
+                maxLong=maxLong+(maxLong-minLong)*(0.20000000000000000);
 
                 admin_level-=1;
                 //admin_level=1;
@@ -374,16 +378,16 @@
         
         $("#IN").on("click", function(){
             console.log('in');
-            if(admin_level==6){
+            if(admin_level==10){
                 alert("Cant be further Zoomed In");
             }
             else{
                 console.log("loccss:= ", minLat, minLong,maxLat,maxLong );
-                minLat=minLat+(maxLat-minLat)*(0.3000000000000000);
-                minLong=minLong+(maxLong-minLong)*(0.3000000000000000);
+                minLat=minLat+(maxLat-minLat)*(0.20000000000000000);
+                minLong=minLong+(maxLong-minLong)*(0.20000000000000000);
                 
-                maxLat=maxLat-(maxLat-minLat)*(0.3000000000000000);
-                maxLong=maxLong-(maxLong-minLong)*(0.3000000000000000);
+                maxLat=maxLat-(maxLat-minLat)*(0.20000000000000000);
+                maxLong=maxLong-(maxLong-minLong)*(0.20000000000000000);
 
                 admin_level+=1;
                 //admin_level=1;
@@ -394,14 +398,43 @@
             }
         });
 
+        function displayAstar(list){
+             console.log("list=",list);
+            //clear();
+            for (var i=0; i < list.length-2; i+=2) {
+                    var lat1 = list[i+1];
+                    var lon1= list[i];
+                    var lat2 = list[i+3];
+                    var lon2= list[i+2];
+                    //console.log("here",lon1, lat1, lon2, lat2 );
+                    
+                    
+
+                    var locX1 = ((lon1 - minLong) * (width) / (maxLong - minLong));
+                    var locY1 = ((maxLat - (lat1)) * (height) / (maxLat - minLat));
+                    var locX2 = ((lon2 - minLong) * (width) / (maxLong - minLong));
+                    var locY2 = ((maxLat - (lat2)) * (height) / (maxLat - minLat));
+                    //console.log("here",locX1, locY1, locX2, locY2 );
+
+                    ctx.strokeStyle = "RED";
+                    ctx.beginPath();
+                    ctx.moveTo(locX1,locY1);
+                    ctx.lineTo(locX2,locY2);
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+            }
+           
+            
+            
+        }
 
         //////////////////////////////////////////////////////////////////
-        
+        displayAstar
         ///////////////// Marker on Map ////////////////////////////////
         var PointChooseFlag=0;
 
-        // astar by point pick  type 2 
-        function astarAjax(Lat1, Lon1, Lat2, Lon2){
+        // astar by point pick  type 1 
+        function astarAjax( Lon1,Lat1, Lon2, Lat2){
 
             console.log("here");
             var request = $.ajax({
@@ -413,12 +446,11 @@
 
             request.done(function(msg) {
                 obj = JSON.parse(msg);
-                console.log(obj);
+                var list= obj.list;
+                displayAstar(list)
+                
 
-                // ids=obj.id;//array
-                // names=obj.name;//array
-
-                // console.log("response= ",ids);
+               
                 
             });
 
@@ -463,6 +495,7 @@
             
              
         });
+        
 
         $("#MarkingRadio").on("click", function(){
             NameSearchRadioCheck=0;
@@ -491,8 +524,9 @@
                     if(PointChooseFlag%2==0){
                      x1 =event.clientX - rect.left;
                      y1 = event.clientY - rect.top;
-
                      mark(img1, event, 30, 30);
+                     
+                     
                  }
                  else{
                     x2 =event.clientX - rect.left;
@@ -513,7 +547,7 @@
                     y2 = (((y2*(maxLat - minLat))/(height)) -  maxLat) * (-1);
 
                     console.log("clicked long lats=", x1,y1,x2, y2);
-
+                    
                     astarAjax(x1, y1, x2, y2);
 
                 }
@@ -617,10 +651,13 @@
         }
 
         function displayWays(list, dlist){
-            clear();
+            //clear();
+            c = document.getElementById("myCanvas");
+            ctx = c.getContext("2d");
+
             var color=['#6f1984', '#e74c3c','#e80633', '#f1c40f', '#3498db' ,'#6f0b01',  '#4ef442','#9b59b6','#414ff4', '#e74c3c' , '#1abc9c', '#ff0000',];
             
-            console.log("list=", list, "dlist=", dlist)
+            //console.log("list=", list, "dlist=", dlist)
             
             //count=0;
             if(dlist.length!=1){
@@ -631,7 +668,7 @@
                     var lat1 = list[2*i];
                     var lon2 = list[2*i+3];
                     var lat2 = list[2*i+2];
-                    
+                    console.log("here",lon1, lat1, lon2, lat2 );
                     
                     
 
@@ -639,12 +676,13 @@
                     var locY1 = ((maxLat - (lat1)) * (height) / (maxLat - minLat));
                     var locX2 = ((lon2 - minLong) * (width) / (maxLong - minLong));
                     var locY2 = ((maxLat - (lat2)) * (height) / (maxLat - minLat));
+                    //console.log("here",locX1, locY1, locX2, locY2 );
 
+                    //ctx.strokeStyle = "RED";
                     ctx.beginPath();
                     ctx.moveTo(locX1,locY1);
                     ctx.lineTo(locX2,locY2);
-                    ctx.lineWidth = 2;
-                    
+                    ctx.lineWidth = 1;
                     
                     ctx.strokeStyle = colorWay[colorCountForWay];
                     ctx.stroke();
@@ -862,7 +900,10 @@
 
         request.done(function(msg) {
             obj = JSON.parse(msg);
-            console.log("from astar type 2:", obj)
+            var list= obj.list;
+            displayAstar(list)
+            //console.log("from astar type 2:", obj)
+            displayAstar(list)
 
             
         });

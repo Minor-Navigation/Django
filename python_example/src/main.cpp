@@ -4,6 +4,14 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <map>
+#include <queue>
+#include <utility>
+#include <math.h> 
+#include <iomanip>  
+#include <algorithm>
+#include <mutex> 
+#include <climits> 
 using namespace std;
 namespace py = pybind11;
 
@@ -405,7 +413,7 @@ public:
 
 typedef struct node{
 public:
-    bool isLeaf,isParentLeaf;
+    bool isLeaf,isParentLeaf,isHighway;
     long long id;
     int level;
     double lon1,lat1,lon2,lat2;
@@ -461,12 +469,56 @@ public:
     }
 };
 
+
+#define earthRadiusKm 6371.0
+double deg2rad(double deg) {
+  return (deg * PI / 180);
+}
+
+//  This function converts radians to decimal degrees
+double rad2deg(double rad) {
+  return (rad * 180 / PI);
+}
+
+class Astar_node{
+public:
+    nodeData nd;
+    double travelDist, remainingDist;
+    double distFrom(double lon,double lat)
+    {
+        //nd.lon  , nd.lat
+
+        double lat1r, lon1r, lat2r, lon2r, u, v;
+        lat1r = deg2rad(lat);
+        lon1r = deg2rad(lon);
+        lat2r = deg2rad(nd.lat);
+        lon2r = deg2rad(nd.lon);
+        u = sin((lat2r - lat1r)/2.0);
+        v = sin((lon2r - lon1r)/2.0);
+        return 2.0 * earthRadiusKm * asin(sqrt(u * u + cos(lat1r) * cos(lat2r) * v * v));
+    }
+
+    bool operator< (const Astar_node &a)
+    {
+        return ((travelDist+remainingDist) > (a.travelDist+a.remainingDist));
+    }
+    
+};
+
+
+bool operator< (const Astar_node &a , const Astar_node &b)
+{
+    return ((b.travelDist+b.remainingDist) < (a.travelDist+a.remainingDist));
+}
+
+
 class rtree{
 
 
 public:
     fstream f,f1,f2;
     vector<ll> nodes_in_box;
+    vector<ll> path;
     ll root;
     fstream file_rtree;
     ll value;
@@ -636,6 +688,154 @@ public:
     }
 
 
+    ll nearestNode2(double lon,double lat)
+    {
+        node n;
+        file_rtree.seekp(root);file_rtree.seekg(root);
+        file_rtree.read((char*)&n , sizeof(node));
+        pair<double,ll> p =nearestNode(lon,lat,n);
+        if(n.isHighway)
+            return p.second;
+        return -1;
+    }
+    
+    pair<double,ll> nearestNode(double lon,double lat, node n)
+    {
+        //cout<<n.id<<" "<<n.lon1<<","<<n.lat1<<" "<<n.lon2<<","<<n.lat2<<endl;
+        if(n.isLeaf && n.isHighway)
+        {
+
+            double d=((lon-n.lon1)*(lon-n.lon1) + (lat-n.lat1)*(lat-n.lat1));
+            return mp(d,n.id);
+        }
+
+        if(n.isLeaf)
+            return mp(0.0,-1);
+        
+        node child,min;
+        double min_dist=-1.0,lo,la,d;
+        bool check=false;
+        pair<double,ll> ans,temp;
+        ans=mp(0.0,-1);
+        for(int i=0;i<n.no_child;i++)
+        {
+            file_rtree.seekp(n.child[i]);file_rtree.seekg(n.child[i]);
+            file_rtree.read((char*)&child , sizeof(node));
+            if(!child.isHighway)
+                continue;
+
+            //cout<< (lon>=child.lon1) <<(lon<=child.lon2) << (lat>=child.lat1) << (lat<=child.lat2)<<" ";
+            if(lon>=child.lon1 && lon<=child.lon2 && lat>=child.lat1 && lat<=child.lat2)
+            {
+                //cout<<" g ";
+                if(!check)
+                    ans=nearestNode(lon,lat,child);
+                else
+                {
+                    temp=nearestNode(lon,lat,child);
+                    if(temp.first<ans.first)
+                        ans=temp;
+                }
+                check=true;
+            }
+            else if(!check)
+            {
+                //cout<<" h ";
+                lo=child.lon1+child.lon2;
+                lo/=2.0;
+                la=child.lat1+child.lat2;
+                la/=2.0;
+                if(min_dist==-1.0)
+                {
+                    min=child;
+                    min_dist = ((lon-lo)*(lon-lo) + (lat-la)*(lat-la));
+                }
+                else
+                {
+                    d = ((lon-lo)*(lon-lo) + (lat-la)*(lat-la));
+                    if(d<min_dist)
+                    {
+                        min_dist=d;
+                        min=child;
+                    }
+
+                }
+
+            }
+        }
+        if(!check && n.no_child>0)
+            return nearestNode(lon,lat,min);
+
+        return ans;
+
+    }
+
+    void AStar(ll source, ll destination)
+    {
+        path.clear();
+        map<ll,ll> parent;
+        map<ll,bool> visited;
+        Astar_node src,cur,child;
+        nodeData dest;
+        src.nd=queryNode(source);
+        dest=queryNode(destination);
+        if(src.nd.id ==-1 || dest.id ==-1)
+            return ;
+        parent[src.nd.id]=-1;
+        src.travelDist = 0.0;
+        src.remainingDist = src.distFrom(dest.lon,dest.lat);
+
+        //cout<<src.nd.id<<" "<<parent[src.nd.id]<<" "<<src.travelDist<< " " <<src.remainingDist<<endl;
+        
+        priority_queue <Astar_node> q;
+        q.push(src);
+        int i;
+
+        while(!q.empty())
+        {
+            cur=q.top();
+            q.pop();
+            visited[cur.nd.id]=true;
+            for(i=0;i<cur.nd.adj.size();i++)
+            {
+                child.nd = queryNode2(cur.nd.adj[i],cur.nd.adjPtr[i]);
+                if(child.nd.id ==-1)
+                    continue;
+                if(visited.find(child.nd.id) != visited.end())
+                    continue;
+                visited[child.nd.id]=true;
+                child.travelDist = cur.travelDist + child.distFrom(cur.nd.lon,cur.nd.lat);
+                child.remainingDist = child.distFrom(dest.lon,dest.lat);
+                 //cout<<child.nd.id<<" "<<cur.nd.id<<" "<<child.travelDist<< " " <<child.remainingDist<<"\t";
+                 parent[child.nd.id]=cur.nd.id;
+                if(child.remainingDist == 0.0) break;
+                
+
+                q.push(child);
+
+            }
+            //cout<<endl;
+            if(child.remainingDist==0.0) break;
+
+            
+
+        }
+
+        
+        path.pb(dest.id);
+        ll it = parent[dest.id];
+        while(it!=-1)
+        {
+            path.pb(it);
+            it=parent[it];
+        }
+
+        reverse(path.begin(), path.end());
+
+       
+        return ;
+    }
+
 
 
 };
@@ -704,8 +904,11 @@ PYBIND11_PLUGIN(example) {
     .def("queryNode", &rtree::queryNode)
     .def("queryNode2", &rtree::queryNode2)
     .def("close", &rtree::close)
+    .def("AStar", &rtree::AStar)
+    .def("nearestNode2", &rtree::nearestNode2)
     .def_readwrite("nodes_in_box", &rtree::nodes_in_box)
     .def_readwrite("root", &rtree::root)
+    .def_readwrite("path", &rtree::path)
     .def_readwrite("value", &rtree::value);
 
     py::class_<nodeData>(m,"nodeData")
