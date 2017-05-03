@@ -25,17 +25,19 @@
         var zoomIntensity = 1.5;
 
         var admin_level=1;
+
+        var maxLatConst = 28.9689998626709,
+        maxLongConst = 77.73299407958984;
+
+        var minLatConst = 28.18301010131836,
+        minLongConst = 76.69200134277344;
+
+        
         var maxLat = 28.9689998626709,
         maxLong = 77.73299407958984;
 
-        // var maxLat = 28.2689998626709,
-        // maxLong = 77.313299407958984;
-
         var minLat = 28.18301010131836,
         minLong = 76.69200134277344;
-
-        // var minLat = 28.18301010131836,
-        // minLong = 76.99200134277344;
 
         var c = document.getElementById("myCanvas");
         var width = c.width;
@@ -192,11 +194,11 @@
         /////////////////Drag Drop./////////////////////////////
         
 
-            var img = new Image();
-            img.onload = function(){
-                ctx.drawImage(img, 0,0);
-            };
-            img.src = "http://images.christmastimeclipart.com/images/2/1271716593176_1788/img_1271716593176_17881.jpg";
+            // var img = new Image();
+            // img.onload = function(){
+            //     ctx.drawImage(img, 0,0);
+            // };
+            // img.src = "http://images.christmastimeclipart.com/images/2/1271716593176_1788/img_1271716593176_17881.jpg";
 
             var canvas=document.getElementById("myCanvas");
             var ctx=canvas.getContext("2d");
@@ -206,10 +208,17 @@
             var canvasWidth=canvas.width;
             var canvasHeight=canvas.height;
             var isDragging=false;
-
+            var canMouseXinit;
+            var canMouseYinit;
+            var canMouseXfin;
+            var canMouseYfin;
+            var xdiff;
+            var  x1, y1;
+            var ydiff;
+            
             function handleMouseDown(e){
-              canMouseX=parseInt(e.clientX-offsetX);
-              canMouseY=parseInt(e.clientY-offsetY);
+              canMouseXinit=parseInt(e.clientX-offsetX);
+              canMouseYinit=parseInt(e.clientY-offsetY);
               // set the drag flag
               isDragging=true;
             }
@@ -218,6 +227,24 @@
               canMouseX=parseInt(e.clientX-offsetX);
               canMouseY=parseInt(e.clientY-offsetY);
               // clear the drag flag
+              if(isDragging==true){
+                console.log("xdiff=",xdiff, "ydiff=", ydiff  );
+
+                    // x1= ((xdiff*(Math.pow(2, admin_level))*(maxLongConst - minLongConst))/(width)) ;
+                    // y1 = ((ydiff*(Math.pow(2, admin_level))*(maxLatConst - minLatConst))/(height))  * (-1);
+
+                    x1= ((xdiff*(Math.pow(2, 0))*(maxLong - minLong))/(width)) ;
+                    y1 = ((ydiff*(Math.pow(2, 0))*(maxLat - minLat))/(height))  * (-1);
+
+                    
+                  minLong-=x1;
+                  maxLong-=x1;
+                  minLat-=y1;
+                  maxLat-=y1;
+
+                console.log("admin_level", admin_level , "locX1=",x1 , "locY1=", y1 , "lat long min max",  minLat, minLong, maxLat, maxLong  );
+                rtreeAjax(admin_level, minLat, minLong, maxLat, maxLong);
+              }
               isDragging=false;
             }
 
@@ -229,15 +256,31 @@
             }
 
             function handleMouseMove(e){
-              canMouseX=parseInt(e.clientX-offsetX);
-              canMouseY=parseInt(e.clientY-offsetY);
-              // if the drag flag is set, clear the canvas and draw the image
-              if(isDragging){
-                  ctx.clearRect(0,0,canvasWidth,canvasHeight);
+                //console.log("locs move",maxLat, maxLong,minLat,minLong   );
+                
+
+                
+                if(isDragging){
+                  canMouseXfin=parseInt(e.clientX-offsetX);
+                  canMouseYfin=parseInt(e.clientY-offsetY);
+
+                  xdiff=canMouseXfin-canMouseXinit;
+                  ydiff=canMouseYfin-canMouseYinit;
                   
-                  rtreeAjax(admin_level, minLat, minLon, maxLat, maxLon);
+                  
+
+                  //console.log("diff",xdiff,ydiff, "lat long min max",  minLat, minLong, maxLat, maxLong  );
+
+
+                  
+                  // if the drag flag is set, clear the canvas and draw the image
+                  
+                      // ctx.clearRect(0,0,canvasWidth,canvasHeight);
+                      // clear();
+
+                  //rtreeAjax(admin_level, minLat, minLong, maxLat, maxLong);
                   //ctx.drawImage(img,canMouseX-128/2,canMouseY-120/2,128,120);
-              }
+                }
             }
 
             $("#myCanvas").mousedown(function(e){handleMouseDown(e);});
