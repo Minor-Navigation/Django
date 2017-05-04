@@ -2,70 +2,68 @@
 {% block script %} 
 
 <script>
-        var colorWay=['#e74c3c','#f1c40f', '#1abc9c', '#3498db' , '#9b59b6', '#e74c3c' , '#ff0000'];
-        var colorCountForWay=0;
-        var scale = 1;
-        var originx = 0;
-        var originy = 0;
+    var colorWay=['#e74c3c','#f1c40f', '#1abc9c', '#3498db' , '#9b59b6', '#e74c3c' , '#ff0000'];
+    var colorCountForWay=0;
 
-        var zoomIntensity = 1.5;
 
-        var admin_level=1;
 
-        var maxLatConst = 28.9689998626709,
-        maxLongConst = 77.73299407958984;
+    var admin_level=1;
 
-        var minLatConst = 28.18301010131836,
-        minLongConst = 76.69200134277344;
+    var maxLatConst = 28.9689998626709,
+    maxLongConst = 77.73299407958984;
 
-        
-        var maxLat = 28.9689998626709,
-        maxLong = 77.73299407958984;
+    var minLatConst = 28.18301010131836,
+    minLongConst = 76.69200134277344;
 
-        var minLat = 28.18301010131836,
-        minLong = 76.69200134277344;
-        var NameSearchRadioCheck=0;
 
+    var maxLat = 28.9689998626709,
+    maxLong = 77.73299407958984;
+
+    var minLat = 28.18301010131836,
+    minLong = 76.69200134277344;
+
+    var NameSearchRadioCheck=0;
+    var SrcDst=0;
 
     //////////////////////////
     // astar by point pick  type 1 
-        function astarAjax( Lon1,Lat1, Lon2, Lat2){
+    function astarAjax( Lon1,Lat1, Lon2, Lat2){
 
-            console.log("here");
-            var request = $.ajax({
-                url: "/app1/astar",
-                type: "POST",
-                data: { type:1, Lat1: Lat1, Lon1:Lon1, Lat2:Lat2, Lon2:Lon2} ,            
-                dataType: "html"
-            });
+        console.log("here");
+        var request = $.ajax({
+            url: "/app1/astar",
+            type: "POST",
+            data: { type:1, Lat1: Lat1, Lon1:Lon1, Lat2:Lat2, Lon2:Lon2} ,            
+            dataType: "html"
+        });
 
-            request.done(function(msg) {
-                obj = JSON.parse(msg);
-                var list= obj.list;
-                displayAstar(list)
-                
+        request.done(function(msg) {
+            obj = JSON.parse(msg);
+            var list= obj.list;
+            displayAstar(list)
 
-               
-                
-            });
 
-            request.fail(function(jqXHR, textStatus) {
-                alert( "Request failed: " + textStatus );
-            });
-        }
-        function displayAstar(list){
-            var c = document.getElementById("myCanvas");
-            var width = c.width;
-            var height = c.height;
-            var ctx = c.getContext("2d");
 
-             console.log("list=",list);
+
+        });
+
+        request.fail(function(jqXHR, textStatus) {
+            alert( "Request failed: " + textStatus );
+        });
+    }
+    function displayAstar(list){
+        var c = document.getElementById("myCanvas");
+        var width = c.width;
+        var height = c.height;
+        var ctx = c.getContext("2d");
+
+        console.log("list=",list);
             //clear();
             for (var i=0; i < list.length-2; i+=2) {
-                    var lat1 = list[i+1];
-                    var lon1= list[i];
-                    var lat2 = list[i+3];
-                    var lon2= list[i+2];
+                var lat1 = list[i+1];
+                var lon1= list[i];
+                var lat2 = list[i+3];
+                var lon2= list[i+2];
                     //console.log("here",lon1, lat1, lon2, lat2 );
                     
                     
@@ -80,34 +78,34 @@
                     ctx.beginPath();
                     ctx.moveTo(locX1,locY1);
                     ctx.lineTo(locX2,locY2);
-                    ctx.lineWidth = 1;
+                    ctx.lineWidth = 2;
                     ctx.stroke();
+                }
+
             }
-            
-        }
 
 
     $(document).ready(function () {
-        $("#MarkingRadio").hide();
-        $("#NameSearchRadio").hide();
-        
-        $("#SearchByNameDiv1").hide();
-        $("#SearchByNameDiv2").hide();
+                $("#MarkingRadio").hide();
+                $("#NameSearchRadio").hide();
 
-        $("#SearchByNameForDirDiv1").hide();
-        $("#SearchByNameForDirDiv2").hide();
+                $("#SearchByNameDiv1").hide();
+                $("#SearchByNameDiv2").hide();
 
-        
-
-        
-        var c = document.getElementById("myCanvas");
-        var width = c.width;
-        var height = c.height;
-        var ctx = c.getContext("2d");
+                $("#SearchByNameForDirDiv1").hide();
+                $("#SearchByNameForDirDiv2").hide();
 
 
-        var visibleWidth = width;
-        var visibleHeight = height;
+
+
+                var c = document.getElementById("myCanvas");
+                var width = c.width;
+                var height = c.height;
+                var ctx = c.getContext("2d");
+
+
+                var visibleWidth = width;
+                var visibleHeight = height;
         ////////////////////////////////////////////////////////////////
         function clear() {
             c = document.getElementById("myCanvas");
@@ -163,7 +161,7 @@
             //     // {% for j in temp %}
             //     //     var temp2 = '{{ j }}';
             //     //     console.log("adjacency_list",temp2);
-                
+
             //     // {% endfor %}
 
 
@@ -198,7 +196,7 @@
                 var count1=-1;    
                 for (var j = 0; j<adjlist[count].length-1 ; j+=2) {
                 //for (var j = 0; j < 1; j++) {
-                    
+
                     count1++;
                     var lon2 = adjlist[count][j];
                     var lat2 = adjlist[count][j+1];
@@ -283,9 +281,10 @@
               canMouseYinit=parseInt(e.clientY-offsetY);
               // set the drag flag
               isDragging=true;
-            }
+          }
 
-            function handleMouseUp(e){
+          function handleMouseUp(e){
+
               canMouseX=parseInt(e.clientX-offsetX);
               canMouseY=parseInt(e.clientY-offsetY);
               // clear the drag flag
@@ -299,16 +298,18 @@
                     y1 = ((ydiff*(Math.pow(2, 0))*(maxLat - minLat))/(height))  * (-1);
 
                     
-                  minLong-=x1;
-                  maxLong-=x1;
-                  minLat-=y1;
-                  maxLat-=y1;
+                    minLong-=x1;
+                    maxLong-=x1;
+                    minLat-=y1;
+                    maxLat-=y1;
 
-                console.log("admin_level", admin_level , "locX1=",x1 , "locY1=", y1 , "lat long min max",  minLat, minLong, maxLat, maxLong  );
-                rtreeAjax(admin_level, minLat, minLong, maxLat, maxLong);
-              }
-              isDragging=false;
-              isMoving=false;
+                    console.log("admin_level", admin_level , "locX1=",x1 , "locY1=", y1 , "lat long min max",  minLat, minLong, maxLat, maxLong  );
+                    rtreeAjax(admin_level, minLat, minLong, maxLat, maxLong);
+                }
+                isDragging=false;
+                isMoving=false;
+
+                SrcDst=1;  
             }
 
             function handleMouseOut(e){
@@ -316,16 +317,16 @@
               canMouseY=parseInt(e.clientY-offsetY);
               // user has left the canvas, so clear the drag flag
               //isDragging=false;
-            }
+          }
 
-            function handleMouseMove(e){
+          function handleMouseMove(e){
                 //console.log("locs move",maxLat, maxLong,minLat,minLong   );
                 
 
                 
                 if(isDragging){
                   isMoving=true;
-                    
+                  SrcDst=0;
                   canMouseXfin=parseInt(e.clientX-offsetX);
                   canMouseYfin=parseInt(e.clientY-offsetY);
 
@@ -345,15 +346,15 @@
 
                   //rtreeAjax(admin_level, minLat, minLong, maxLat, maxLong);
                   //ctx.drawImage(img,canMouseX-128/2,canMouseY-120/2,128,120);
-                }
-            }
+              }
+          }
 
-            $("#myCanvas").mousedown(function(e){handleMouseDown(e);});
-            $("#myCanvas").mouseup(function(e){handleMouseUp(e);});
-            $("#myCanvas").mousemove(function(e){handleMouseMove(e);});
-            $("#myCanvas").mouseout(function(e){handleMouseOut(e);});
+          $("#myCanvas").mousedown(function(e){handleMouseDown(e);});
+          $("#myCanvas").mouseup(function(e){handleMouseUp(e);});
+          $("#myCanvas").mousemove(function(e){handleMouseMove(e);});
+          $("#myCanvas").mouseout(function(e){handleMouseOut(e);});
 
-        
+
 
         ////////////////////////////////////////////////////////////////
         /////////////////Zoom in Zoom Out./////////////////////////////
@@ -383,8 +384,8 @@
 
 
                     //for (var i = 0; i < 4;i+=2) {
-                    var lon1 = data[i];
-                    var lat1 = data[i+1];
+                        var lon1 = data[i];
+                        var lat1 = data[i+1];
                     //console.log("node=", lon1, lat1);    
                     
 
@@ -392,15 +393,15 @@
                     var locX1 = ((lon1 - minLon) * (width) / (maxLon - minLon));
                     var locY1 = ((maxLat - (lat1)) * (height) / (maxLat - minLat));
 
-                    // ctx.strokeStyle = "BLUE";
-                    // //console.log(lat, lon, locX1, locY1);
+                    ctx.strokeStyle = "BLUE";
+                    //console.log(lat, lon, locX1, locY1);
                     
-                    // ctx.fillRect(locX1, locY1, 2, 2);
-                    // ctx.stroke();
+                    ctx.fillRect(locX1, locY1, 2, 2);
+                    ctx.stroke();
 
                     for (var j = 0; j<adjlist[count1].length-1 ; j+=2) {
-                    
-                        
+
+
                         var lon2 = adjlist[count1][j];
                         var lat2 = adjlist[count1][j+1];
                         
@@ -531,11 +532,13 @@
             $("#SearchByNameForDirDiv1").hide();
             $("#SearchByNameForDirDiv2").hide();
             
-             
+
         });
         
 
         $("#MarkingRadio").on("click", function(){
+            SrcDst=1;
+
             NameSearchRadioCheck=0;
             $("#SearchByNameForDirDiv1").hide();
             $("#SearchByNameForDirDiv2").hide();
@@ -553,8 +556,10 @@
             var img2 = new Image();
             img2.src = '{% static "img/dst.png" %}';
             c.onclick = function(event){
-
-                var rect = c.getBoundingClientRect();
+                setTimeout(function(){
+                  //do what you need here
+                    if(isMoving==false && SrcDst==1){
+                    var rect = c.getBoundingClientRect();
                     //     var x =event.clientX - rect.left;
                     //     var y = event.clientY - rect.top;
                     //     // console.log("x=", x, "y=", y);
@@ -563,33 +568,35 @@
                      x1 =event.clientX - rect.left;
                      y1 = event.clientY - rect.top;
                      mark(img1, event, 30, 30);
-                     
-                     
-                 }
-                 else{
-                    x2 =event.clientX - rect.left;
-                    y2 = event.clientY - rect.top;
-                    mark(img2, event, 30 , 30 );
-                    console.log("clicked locs=", x1,y1,x2, y2);
-                    
-                    //x1 = ((lon1 - minLong) * (width) / (maxLong - minLong));
-                    x1 = ((x1*(maxLong - minLong))/(width)) +  minLong;
+                     }
+                     else{
+                        x2 =event.clientX - rect.left;
+                        y2 = event.clientY - rect.top;
+                        mark(img2, event, 30 , 30 );
+                        console.log("clicked locs=", x1,y1,x2, y2);
 
-                    //y1 = ((maxLat - (lat1)) * (height) / (maxLat - minLat));
-                    y1 = (((y1*(maxLat - minLat))/(height)) -  maxLat) * (-1);
+                            //x1 = ((lon1 - minLong) * (width) / (maxLong - minLong));
+                            x1 = ((x1*(maxLong - minLong))/(width)) +  minLong;
 
-                    //x2 = ((lon2 - minLong) * (width) / (maxLong - minLong));
-                    x2 = ((x2*(maxLong - minLong))/(width)) +  minLong;
+                            //y1 = ((maxLat - (lat1)) * (height) / (maxLat - minLat));
+                            y1 = (((y1*(maxLat - minLat))/(height)) -  maxLat) * (-1);
 
-                    //y2 = ((maxLat - (lat2)) * (height) / (maxLat - minLat));
-                    y2 = (((y2*(maxLat - minLat))/(height)) -  maxLat) * (-1);
+                            //x2 = ((lon2 - minLong) * (width) / (maxLong - minLong));
+                            x2 = ((x2*(maxLong - minLong))/(width)) +  minLong;
 
-                    console.log("clicked long lats=", x1,y1,x2, y2);
-                    
-                    astarAjax(x1, y1, x2, y2);
+                            //y2 = ((maxLat - (lat2)) * (height) / (maxLat - minLat));
+                            y2 = (((y2*(maxLat - minLat))/(height)) -  maxLat) * (-1);
 
-                }
+                            console.log("clicked long lats=", x1,y1,x2, y2);
+                            
+                            astarAjax(x1, y1, x2, y2);
 
+                        }
+
+                    }
+
+                }, 20);
+                
             };
 
         });
@@ -604,6 +611,7 @@
 
 
         $("#SrcDst").on("click", function(){
+            SrcDst=0;
             $("#MarkingRadio").show();
             $("#NameSearchRadio").show();
 
@@ -692,7 +700,9 @@
             //clear();
             c = document.getElementById("myCanvas");
             ctx = c.getContext("2d");
-
+            width = c.width;
+            height = c.height;
+            
             var color=['#6f1984', '#e74c3c','#e80633', '#f1c40f', '#3498db' ,'#6f0b01',  '#4ef442','#9b59b6','#414ff4', '#e74c3c' , '#1abc9c', '#ff0000',];
             
             //console.log("list=", list, "dlist=", dlist)
@@ -700,29 +710,32 @@
             //count=0;
             if(dlist.length!=1){
                 for (var i=0; i < dlist.length-1; i++) {
-                  
+
 
                     var lon1 = list[2*i+1];
                     var lat1 = list[2*i];
                     var lon2 = list[2*i+3];
                     var lat2 = list[2*i+2];
-                    console.log("here",lon1, lat1, lon2, lat2 );
+                    console.log("here1",lon1, lat1, lon2, lat2 );
                     
                     
 
-                    var locX1 = ((lon1 - minLong) * (width) / (maxLong - minLong));
-                    var locY1 = ((maxLat - (lat1)) * (height) / (maxLat - minLat));
-                    var locX2 = ((lon2 - minLong) * (width) / (maxLong - minLong));
-                    var locY2 = ((maxLat - (lat2)) * (height) / (maxLat - minLat));
-                    //console.log("here",locX1, locY1, locX2, locY2 );
+                    var locX1 = ((lon1 - minLong)  / (maxLong - minLong))* (width);
+                    var locY1 = ((maxLat - (lat1))  / (maxLat - minLat))* (height);
+                    var locX2 = ((lon2 - minLong) / (maxLong - minLong)) * (width);
+                    var locY2 = ((maxLat - (lat2)) / (maxLat - minLat)) * (height);
 
-                    //ctx.strokeStyle = "RED";
+                    console.log("here2",width,height,  locX1, locY1, locX2, locY2 );
+                    
+                    console.log("here3",minLong, maxLong, minLat, maxLat );
+
+                    ctx.strokeStyle = "RED";
                     ctx.beginPath();
                     ctx.moveTo(locX1,locY1);
                     ctx.lineTo(locX2,locY2);
-                    ctx.lineWidth = 1;
+                    ctx.lineWidth = 2;
                     
-                    ctx.strokeStyle = colorWay[colorCountForWay];
+                    //ctx.strokeStyle = colorWay[colorCountForWay];
                     ctx.stroke();
 
                     // ctx.fillRect(locX1, locY1, 1, 1);
@@ -735,20 +748,20 @@
                         //break;
                         i+=1;
                         
-                        colorCountForWay+=1;
-                        if(colorCountForWay == colorWay.length){
-                            colorCountForWay=0;
-                        }
+                        // colorCountForWay+=1;
+                        // if(colorCountForWay == colorWay.length){
+                        //     colorCountForWay=0;
+                        // }
 
                     }
                     
                 }
             }                
 
-            colorCountForWay+=1;
-            if(colorCountForWay == colorWay.length){
-                colorCountForWay=0;
-            }
+            // colorCountForWay+=1;
+            // if(colorCountForWay == colorWay.length){
+            //     colorCountForWay=0;
+            // }
         }
 
 
@@ -765,7 +778,7 @@
 
             //console.log('id of clicked item= ', this.id, "name of selected item=", parent.attr("id"));
             //if(type=="nodes" || type=="ways"){
-                
+
                 document.getElementsByName('search_name')[0].value=name;
                 var img1 = new Image();
                 img1.src ='{% static "img/pin.png" %}';
@@ -787,7 +800,7 @@
                     });
 
                 }
-               
+
 
                 request.done(function(msg) {
                     obj = JSON.parse(msg);
@@ -808,8 +821,8 @@
                     else{ //nodes, 2, 3
                         console.log("nodes inside");
                         
-                       
-                       if(type=="2"){
+
+                        if(type=="2"){
                             document.getElementsByName('search_name_src')[0].value=name;
                             document.getElementsByName('search_name_src_id')[0].value=id;
                             document.getElementsByName('search_name_src_lon')[0].value=node_list[1];
@@ -850,49 +863,49 @@
 
         ////////////////////////////////
 
-    function listing(way_names, way_ids,node_names, node_ids, type) {
+        function listing(way_names, way_ids,node_names, node_ids, type) {
 
-        var div = $('<div/>');
-        if(type==1){
+            var div = $('<div/>');
+            if(type==1){
 
-            var h1 = $('<h4>Ways:</h4>');
-            if(way_names.length!=0){
-                div.append(h1);
-                var ul1 = $('<ul class="list-group" id="ways"  />').appendTo(div);
-                for(var i=0 ;i<way_names.length; i++){
-                    var li = $('<li class="list-group-item" />').appendTo(ul1);
-                    li.attr("id", way_names[i]);
-                    li.attr("name", way_ids[i]);
-                    var t =way_names[i];
-                    li.append(t);
+                var h1 = $('<h4>Ways:</h4>');
+                if(way_names.length!=0){
+                    div.append(h1);
+                    var ul1 = $('<ul class="list-group" id="ways"  />').appendTo(div);
+                    for(var i=0 ;i<way_names.length; i++){
+                        var li = $('<li class="list-group-item" />').appendTo(ul1);
+                        li.attr("id", way_names[i]);
+                        li.attr("name", way_ids[i]);
+                        var t =way_names[i];
+                        li.append(t);
+                    }
                 }
-            }
 
 
-            
 
-            var h2 = $('<h4>Nodes:</h4>');
-            if(node_names.length!=0){
-                div.append(h2);
-                var ul2 = $('<ul class="list-group" id="nodes"  />').appendTo(div);
 
-                for(var i=0 ;i<node_names.length; i++){
-                    var li = $('<li class="list-group-item" />').appendTo(ul2);
-                    li.attr("id", node_names[i]);
-                    li.attr("name", node_ids[i]);
-                    var t =node_names[i];
-                    li.append(t);
+                var h2 = $('<h4>Nodes:</h4>');
+                if(node_names.length!=0){
+                    div.append(h2);
+                    var ul2 = $('<ul class="list-group" id="nodes"  />').appendTo(div);
+
+                    for(var i=0 ;i<node_names.length; i++){
+                        var li = $('<li class="list-group-item" />').appendTo(ul2);
+                        li.attr("id", node_names[i]);
+                        li.attr("name", node_ids[i]);
+                        var t =node_names[i];
+                        li.append(t);
+                    }
                 }
-            }
 
-        }
-        else if(type==2 || type==3){
-            var h2 = $('<h4>Nodes:</h4>');
-            if(node_names.length!=0){
-                div.append(h2);
-                var ul2;
-                if(type==2){
-                    ul2 = $('<ul class="list-group" id="2"  />').appendTo(div);
+            }
+            else if(type==2 || type==3){
+                var h2 = $('<h4>Nodes:</h4>');
+                if(node_names.length!=0){
+                    div.append(h2);
+                    var ul2;
+                    if(type==2){
+                        ul2 = $('<ul class="list-group" id="2"  />').appendTo(div);
                     //node_ids
 
                 }
@@ -900,7 +913,7 @@
                     ul2 = $('<ul class="list-group" id="3"  />').appendTo(div);
                     //node_ids
                 }
-               
+
                 for(var i=0 ;i<node_names.length; i++){
                     var li = $('<li class="list-group-item" />').appendTo(ul2);
                     li.attr("id", node_names[i]);
@@ -972,7 +985,7 @@
     //         //console.log("from astar type 2:", obj)
     //         displayAstar(list)
 
-            
+
     //     });
 
     //     request.fail(function(jqXHR, textStatus) {
@@ -1026,28 +1039,28 @@
 
   <button id="SearchByName" type="button" class="btn btn-default btn-sm" style="z-index:2; position:absolute; ">
      <span class="glyphicon glyphicon-search"></span> Search By Name
-  </button>
+ </button>
 
-  <button id="SrcDst" type="button" class="btn btn-default btn-sm" style="z-index:2; position:absolute; ">
-      <span class="glyphicon glyphicon-screenshot"></span> Select SRC and DST
-  </button>
+ <button id="SrcDst" type="button" class="btn btn-default btn-sm" style="z-index:2; position:absolute; ">
+  <span class="glyphicon glyphicon-screenshot"></span> Select SRC and DST
+</button>
 
   <!-- <button id="Directions" type="button" class="btn btn-default btn-sm" style="z-index:2; position:absolute; ">
       <span class="glyphicon glyphicon-road"></span> Get-Directions
   </button>
- -->
+-->
 
- <!-- <form> -->
-    <label id="MarkingRadio" class="radio-inline" style="z-index:2; position:absolute;">
-      <input type="radio" name="optradio">Marking Point On Map
-    </label>
+<!-- <form> -->
+<label id="MarkingRadio" class="radio-inline" style="z-index:2; position:absolute;">
+  <input type="radio" name="optradio">Marking Point On Map
+</label>
 
-    <label id="NameSearchRadio" class="radio-inline" style="z-index:2; position:absolute;">
-      <input type="radio" name="optradio">Searching By Name
-    </label>
+<label id="NameSearchRadio" class="radio-inline" style="z-index:2; position:absolute;">
+  <input type="radio" name="optradio">Searching By Name
+</label>
 
-    
-  <!-- </form> -->
+
+<!-- </form> -->
 
 
 
@@ -1067,22 +1080,22 @@
         <br>
 
         <button type="button"  onclick="myCall(document.getElementsByName('search_name')[0].value, 1)" class="btn btn-default" value="Search" />
-            <span class="glyphicon glyphicon-search"></span> Search
-        </button>
+        <span class="glyphicon glyphicon-search"></span> Search
+    </button>
 
 
     <br><br>
-    </div>
+</div>
 
 </div>
 <div id="SearchByNameDiv2"class="col-lg-4">
 
-    
+
     <div class="listing1"> 
     </div>
 
     <!-- <div id="mybox">
-    </div> -->
+</div> -->
 
 </div>
 
@@ -1100,25 +1113,25 @@
         <input type="hidden" name="search_name_src_lat" value="">
         
         <button type="button"  onclick="myCall(document.getElementsByName('search_name_src')[0].value, 2)" class="btn btn-default" value="Search" />
-            <span class="glyphicon glyphicon-search"></span> Search
-        </button>
+        <span class="glyphicon glyphicon-search"></span> Search
+    </button>
 
-        <br><br>
+    <br><br>
 
-        <label for="inputdefault">Search For DST By Name:</label>
+    <label for="inputdefault">Search For DST By Name:</label>
 
-        <input type="text" name="search_name_dst" class="form-control" value="">
-        <input type="hidden" name="search_name_dst_id" value="">
-        <input type="hidden" name="search_name_dst_lon" value="">
-        <input type="hidden" name="search_name_dst_lat" value="">
+    <input type="text" name="search_name_dst" class="form-control" value="">
+    <input type="hidden" name="search_name_dst_id" value="">
+    <input type="hidden" name="search_name_dst_lon" value="">
+    <input type="hidden" name="search_name_dst_lat" value="">
 
-        <button type="button"  onclick="myCall(document.getElementsByName('search_name_dst')[0].value, 3)" class="btn btn-default" value="Search" />
-            <span class="glyphicon glyphicon-search"></span> Search
-        </button>
+    <button type="button"  onclick="myCall(document.getElementsByName('search_name_dst')[0].value, 3)" class="btn btn-default" value="Search" />
+    <span class="glyphicon glyphicon-search"></span> Search
+</button>
 
-        <br><br>
-         
-        
+<br><br>
+
+
         <!-- <button id="Directions" type="button"  onclick="getDirections(document.getElementsByName('search_name_src_id')[0].value, document.getElementsByName('search_name_dst_id')[0].value)" class="btn btn-default btn-sm" >
             <span class="glyphicon glyphicon-road"></span> Get-Directions
         </button> -->
@@ -1127,26 +1140,26 @@
         <button id="Directions" type="button"  onclick="astarAjax(document.getElementsByName('search_name_src_lon')[0].value,document.getElementsByName('search_name_src_lat')[0].value , document.getElementsByName('search_name_dst_lon')[0].value, document.getElementsByName('search_name_dst_lat')[0].value )"  class="btn btn-default btn-sm" >
             <span class="glyphicon glyphicon-road"></span> Get-Directions
         </button>
-       
-       
+
+
 
         <!-- <button type="button"  onclick="myCall(document.getElementsByName('search_name')[0].value)" class="btn btn-default" value="Search" />
             <span class="glyphicon glyphicon-search"></span> Search
         </button> -->
 
 
-    <br><br>
+        <br><br>
     </div>
 
 </div>
 <div id="SearchByNameForDirDiv2"class="col-lg-4">
 
-    
+
     <div class="listing2"  > 
     </div>
 
     <!-- <div id="mybox">
-    </div> -->
+</div> -->
 
 </div>
 
@@ -1156,4 +1169,4 @@
                 
                 <img src="{% static "img/dst.png" %}" alt="My image"/> -->
 
-{% endblock %}
+                {% endblock %}
